@@ -1,0 +1,541 @@
+{
+  "$schema": "https://raw.githubusercontent.com/vuerd/vuerd/master/json-schema/vuerd.json",
+  "canvas": {
+    "version": "2.2.11",
+    "width": 2000,
+    "height": 1600,
+    "scrollTop": 0,
+    "scrollLeft": 0,
+    "zoomLevel": 0.9,
+    "show": {
+      "tableProperties": true,
+      "columnComment": true,
+      "columnDataType": true,
+      "columnDefault": true,
+      "columnAutoIncrement": true,
+      "columnPrimaryKey": true,
+      "columnUnique": true,
+      "columnNotNull": true,
+      "relationship": true
+    },
+    "database": "Oracle",
+    "databaseName": "B2B_PARTNER_MOVIE_API",
+    "canvasType": "ERD"
+  },
+  "table": {
+    "tables": [
+      {
+        "id": "tbl-api-companies",
+        "name": "API_COMPANIES",
+        "comment": "B2B 파트너 업체 정보 및 OAuth 2.0 Client 자격증명",
+        "ui": {
+          "active": false,
+          "left": 50,
+          "top": 50,
+          "width": 420,
+          "height": 280,
+          "zIndex": 1
+        },
+        "columns": [
+          {
+            "id": "col-ac-company-id",
+            "name": "COMPANY_ID",
+            "comment": "업체 고유 식별 PK ID",
+            "dataType": "NUMBER",
+            "default": "",
+            "option": {
+              "autoIncrement": true,
+              "primaryKey": true,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": ["PK"] }
+          },
+          {
+            "id": "col-ac-company-name",
+            "name": "COMPANY_NAME",
+            "comment": "파트너 업체/회사명",
+            "dataType": "VARCHAR2(100)",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": [] }
+          },
+          {
+            "id": "col-ac-business-number",
+            "name": "BUSINESS_NUMBER",
+            "comment": "사업자등록번호",
+            "dataType": "VARCHAR2(50)",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            },
+            "ui": { "keys": [] }
+          },
+          {
+            "id": "col-ac-client-id",
+            "name": "CLIENT_ID",
+            "comment": "OAuth 2.0 Client ID (API 인증 키)",
+            "dataType": "VARCHAR2(100)",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": true,
+              "notNull": true
+            },
+            "ui": { "keys": ["UK"] }
+          },
+          {
+            "id": "col-ac-client-secret",
+            "name": "CLIENT_SECRET",
+            "comment": "OAuth 2.0 Client Secret (API 시크릿 키)",
+            "dataType": "VARCHAR2(255)",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": [] }
+          },
+          {
+            "id": "col-ac-status",
+            "name": "STATUS",
+            "comment": "업체 계정 상태 (ACTIVE / SUSPENDED)",
+            "dataType": "VARCHAR2(20)",
+            "default": "'ACTIVE'",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": [] }
+          },
+          {
+            "id": "col-ac-daily-limit",
+            "name": "DAILY_LIMIT",
+            "comment": "업체별 일일 API 호출 한도 건수",
+            "dataType": "NUMBER",
+            "default": "10000",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": [] }
+          },
+          {
+            "id": "col-ac-created-at",
+            "name": "CREATED_AT",
+            "comment": "업체 등록 일시",
+            "dataType": "TIMESTAMP",
+            "default": "CURRENT_TIMESTAMP",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": [] }
+          }
+        ]
+      },
+      {
+        "id": "tbl-api-company-tokens",
+        "name": "API_COMPANY_TOKENS",
+        "comment": "B2B 파트너 업체 전용 발급 OAuth 2.0 Access Token 관리",
+        "ui": {
+          "active": false,
+          "left": 550,
+          "top": 50,
+          "width": 420,
+          "height": 280,
+          "zIndex": 2
+        },
+        "columns": [
+          {
+            "id": "col-act-token-id",
+            "name": "TOKEN_ID",
+            "comment": "토큰 레코드 PK ID",
+            "dataType": "NUMBER",
+            "default": "",
+            "option": {
+              "autoIncrement": true,
+              "primaryKey": true,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": ["PK"] }
+          },
+          {
+            "id": "col-act-access-token",
+            "name": "ACCESS_TOKEN",
+            "comment": "발급된 24시간 Bearer Access Token 문자열",
+            "dataType": "VARCHAR2(500)",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": true,
+              "notNull": true
+            },
+            "ui": { "keys": ["UK"] }
+          },
+          {
+            "id": "col-act-refresh-token",
+            "name": "REFRESH_TOKEN",
+            "comment": "토큰 갱신용 Refresh Token 문자열 (선택)",
+            "dataType": "VARCHAR2(500)",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": true,
+              "notNull": false
+            },
+            "ui": { "keys": ["UK"] }
+          },
+          {
+            "id": "col-act-company-id",
+            "name": "COMPANY_ID",
+            "comment": "토큰을 소유한 파트너 업체 ID (FK)",
+            "dataType": "NUMBER",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": ["FK"] }
+          },
+          {
+            "id": "col-act-client-id",
+            "name": "CLIENT_ID",
+            "comment": "발급에 사용된 Client ID",
+            "dataType": "VARCHAR2(100)",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": [] }
+          },
+          {
+            "id": "col-act-scope",
+            "name": "SCOPE",
+            "comment": "토큰 접근 권한 범위 (read, write)",
+            "dataType": "VARCHAR2(200)",
+            "default": "'read,write'",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            },
+            "ui": { "keys": [] }
+          },
+          {
+            "id": "col-act-expires-at",
+            "name": "ACCESS_TOKEN_EXPIRES_AT",
+            "comment": "Access Token 만료 일시",
+            "dataType": "TIMESTAMP",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": [] }
+          },
+          {
+            "id": "col-act-is-revoked",
+            "name": "IS_REVOKED",
+            "comment": "토큰 폐기 여부 (Y/N)",
+            "dataType": "CHAR(1)",
+            "default": "'N'",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": [] }
+          }
+        ]
+      },
+      {
+        "id": "tbl-api-movies",
+        "name": "API_MOVIES",
+        "comment": "B2B 파트너 업체별 소유/배급 영화 데이터 자원",
+        "ui": {
+          "active": false,
+          "left": 50,
+          "top": 400,
+          "width": 420,
+          "height": 280,
+          "zIndex": 3
+        },
+        "columns": [
+          {
+            "id": "col-am-movie-id",
+            "name": "MOVIE_ID",
+            "comment": "영화 고유 PK ID",
+            "dataType": "NUMBER",
+            "default": "",
+            "option": {
+              "autoIncrement": true,
+              "primaryKey": true,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": ["PK"] }
+          },
+          {
+            "id": "col-am-company-id",
+            "name": "COMPANY_ID",
+            "comment": "영화 데이터를 배급/소유하는 파트너 업체 ID (FK)",
+            "dataType": "NUMBER",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": ["FK"] }
+          },
+          {
+            "id": "col-am-title",
+            "name": "TITLE",
+            "comment": "영화 제목",
+            "dataType": "VARCHAR2(200)",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": [] }
+          },
+          {
+            "id": "col-am-original-title",
+            "name": "ORIGINAL_TITLE",
+            "comment": "영화 원제",
+            "dataType": "VARCHAR2(200)",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            },
+            "ui": { "keys": [] }
+          },
+          {
+            "id": "col-am-release-date",
+            "name": "RELEASE_DATE",
+            "comment": "개봉 일자",
+            "dataType": "DATE",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            },
+            "ui": { "keys": [] }
+          },
+          {
+            "id": "col-am-running-time",
+            "name": "RUNNING_TIME",
+            "comment": "상영 시간 (분 단위)",
+            "dataType": "NUMBER",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            },
+            "ui": { "keys": [] }
+          },
+          {
+            "id": "col-am-plot",
+            "name": "PLOT",
+            "comment": "영화 줄거리 상세",
+            "dataType": "CLOB",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": false
+            },
+            "ui": { "keys": [] }
+          },
+          {
+            "id": "col-am-created-at",
+            "name": "CREATED_AT",
+            "comment": "영화 등록 일시",
+            "dataType": "TIMESTAMP",
+            "default": "CURRENT_TIMESTAMP",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": [] }
+          }
+        ]
+      },
+      {
+        "id": "tbl-api-call-logs",
+        "name": "API_CALL_LOGS",
+        "comment": "B2B 파트너 업체별 API 실시간 호출 및 트래킹 로그",
+        "ui": {
+          "active": false,
+          "left": 550,
+          "top": 400,
+          "width": 420,
+          "height": 260,
+          "zIndex": 4
+        },
+        "columns": [
+          {
+            "id": "col-acl-log-id",
+            "name": "LOG_ID",
+            "comment": "호출 로그 PK ID",
+            "dataType": "NUMBER",
+            "default": "",
+            "option": {
+              "autoIncrement": true,
+              "primaryKey": true,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": ["PK"] }
+          },
+          {
+            "id": "col-acl-company-id",
+            "name": "COMPANY_ID",
+            "comment": "API를 호출한 파트너 업체 ID (FK)",
+            "dataType": "NUMBER",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": ["FK"] }
+          },
+          {
+            "id": "col-acl-endpoint",
+            "name": "ENDPOINT",
+            "comment": "호출된 API 엔드포인트 경로",
+            "dataType": "VARCHAR2(200)",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": [] }
+          },
+          {
+            "id": "col-acl-http-method",
+            "name": "HTTP_METHOD",
+            "comment": "HTTP 메서드 (GET, POST 등)",
+            "dataType": "VARCHAR2(10)",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": [] }
+          },
+          {
+            "id": "col-acl-status-code",
+            "name": "STATUS_CODE",
+            "comment": "HTTP 응답 상태 코드 (200, 401 등)",
+            "dataType": "NUMBER",
+            "default": "",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": [] }
+          },
+          {
+            "id": "col-acl-created-at",
+            "name": "CREATED_AT",
+            "comment": "API 호출 일시",
+            "dataType": "TIMESTAMP",
+            "default": "CURRENT_TIMESTAMP",
+            "option": {
+              "autoIncrement": false,
+              "primaryKey": false,
+              "unique": false,
+              "notNull": true
+            },
+            "ui": { "keys": [] }
+          }
+        ]
+      }
+    ]
+  },
+  "memo": { "memos": [] },
+  "relationship": {
+    "relationships": [
+      {
+        "id": "rel-companies-tokens",
+        "identification": false,
+        "relationshipType": "ZeroOneN",
+        "startConstraintType": "None",
+        "endConstraintType": "None",
+        "start": { "tableId": "tbl-api-companies", "columnIds": ["col-ac-company-id"] },
+        "end": { "tableId": "tbl-api-company-tokens", "columnIds": ["col-act-company-id"] }
+      },
+      {
+        "id": "rel-companies-movies",
+        "identification": false,
+        "relationshipType": "ZeroOneN",
+        "startConstraintType": "None",
+        "endConstraintType": "None",
+        "start": { "tableId": "tbl-api-companies", "columnIds": ["col-ac-company-id"] },
+        "end": { "tableId": "tbl-api-movies", "columnIds": ["col-am-company-id"] }
+      },
+      {
+        "id": "rel-companies-logs",
+        "identification": false,
+        "relationshipType": "ZeroOneN",
+        "startConstraintType": "None",
+        "endConstraintType": "None",
+        "start": { "tableId": "tbl-api-companies", "columnIds": ["col-ac-company-id"] },
+        "end": { "tableId": "tbl-api-call-logs", "columnIds": ["col-acl-company-id"] }
+      }
+    ]
+  }
+}

@@ -1,36 +1,27 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏢 B2B 파트너 업체 OAuth 2.0 API 프로젝트
 
-## Getting Started
+본 프로젝트는 개별 사용자가 아닌 **업체/기업(Company/Partner) 단위로 OAuth 2.0 Client Credentials 인증**을 받아 API를 호출하고 자사 데이터를 연동하는 **B2B OAuth 2.0 API 시스템**입니다.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🌐 1. 대화형 B2B API 대시보드
+개발 서버(`npm run dev`) 실행 후 브라우저에서 [http://localhost:3000](http://localhost:3000)에 접속하시면 **B2B 파트너 대화형 API 테스트 콘솔**을 통해 브라우저에서 즉시 토큰 발급 및 업체별 API 연동을 실습하실 수 있습니다.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🔑 2. 사전 등록된 파트너 업체 계정
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| 업체명 | Client ID | Client Secret |
+| :--- | :--- | :--- |
+| **민스튜디오 엔터테인먼트** | `partner_minstudio` | `secret_minstudio_key123` |
+| **시네마 파트너스** | `partner_cinema` | `secret_cinema_key999` |
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 📋 3. B2B 엔드포인트 목록
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+* `POST /api/oauth/companies`: 신규 파트너 업체 등록 및 Client ID / Secret 발급
+* `POST /api/oauth/token`: B2B 업체 Access Token 발급 (`grant_type=client_credentials`)
+* `GET /api/v1/movies`: 업체 영화 목록 조회 (Bearer 업체 토큰 전달 시 해당 업체 데이터 필터링)
+* `POST /api/v1/movies`: 자사 신규 영화 등록 (**Header: `Authorization: Bearer <COMPANY_TOKEN>` 필수**)
+* `GET /api/v1/companies/me`: 내 업체 프로필 및 API 실시간 호출 로그 조회 (**Header: `Authorization: Bearer <COMPANY_TOKEN>` 필수**)
