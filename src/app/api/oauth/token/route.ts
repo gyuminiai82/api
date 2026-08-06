@@ -4,7 +4,7 @@ import { generateTokenString } from '@/lib/auth';
 
 /**
  * POST /api/oauth/token
- * B2B 업체 전용 OAuth 2.0 토큰 발급 엔드포인트 (Client Credentials Grant)
+ * B2B 업체 전용 OAuth 2.0 토큰 발급 엔드포인트
  * Body: { grant_type: "client_credentials", client_id, client_secret }
  */
 export async function POST(req: NextRequest) {
@@ -57,16 +57,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. 업체 전용 Access Token 생성 (유효기간: 24시간)
+    // 2. Access Token (24시간 = 86,400초) 및 Refresh Token (30일 = 2,592,000초) 발급
     const accessToken = generateTokenString('comp_at');
+    const refreshToken = generateTokenString('comp_rt');
     const accessExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24시간
+    const refreshExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30일
 
     await executeQuery(
       `INSERT INTO API_COMPANY_TOKENS 
-       (ACCESS_TOKEN, COMPANY_ID, CLIENT_ID, SCOPE, ACCESS_TOKEN_EXPIRES_AT, IS_REVOKED)
-       VALUES (:access_token, :company_id, :client_id, 'read,write', :expires_at, 'N')`,
+       (ACCESS_TOKEN, REFRESH_TOKEN, COMPANY_ID, CLIENT_ID, SCOPE, ACCESS_TOKEN_EXPIRES_AT, IS_REVOKED)
+       VALUES (:access_token, :refresh_token, :company_id, :client_id, 'read,write', :expires_at, 'N')`,
       {
         access_token: accessToken,
+        refresh_token: refreshToken,
         company_id: company.COMPANY_ID,
         client_id,
         expires_at: accessExpiresAt,
@@ -77,7 +80,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       access_token: accessToken,
       token_type: 'Bearer',
-      expires_in: 86400,
+      expires_in: 86400, // 24시간 (초 단위)
+      refresh_token: refreshToken,
+      refresh_token_expires_in: 2592000, // 30일 (초 단위)
       scope: 'read,write',
       company_name: company.COMPANY_NAME,
       company_id: company.COMPANY_ID,

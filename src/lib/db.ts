@@ -19,7 +19,7 @@ export async function getDbPool(): Promise<oracledb.Pool> {
 
   if (!user || !password || !connectString) {
     throw new Error(
-      '.env.local 파일에 DB_USER, DB_PASSWORD, DB_CONNECT_STRING이 제대로 설정되지 않았습니다.'
+      '환경 변수(process.env)에 DB_USER, DB_PASSWORD, DB_CONNECT_STRING이 설정되지 않았습니다. Vercel Settings > Environment Variables 설정을 확인 후 Redeploy(재배포)해 주세요.'
     );
   }
 

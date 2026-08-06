@@ -19,9 +19,9 @@ const API_LIST: ApiEndpoint[] = [
     category: 'B2B OAuth 2.0 Auth',
     method: 'POST',
     path: '/api/oauth/token',
-    title: '1. B2B 업체 Access Token 발급 (Client Credentials Grant)',
+    title: '1. B2B 업체 Access Token & Refresh Token 발급 (Client Credentials Grant)',
     authRequired: false,
-    description: '발급받은 업체 Client ID와 Client Secret으로 24시간 유효한 업체 전용 Bearer 토큰을 발급받습니다.',
+    description: '업체 Client ID와 Client Secret으로 Access Token(24시간 유효) 및 Refresh Token(30일 유효)을 발급받습니다.',
     headers: {
       'Content-Type': 'application/json',
     },
@@ -34,6 +34,8 @@ const API_LIST: ApiEndpoint[] = [
       access_token: 'comp_at_89f21a...',
       token_type: 'Bearer',
       expires_in: 86400,
+      refresh_token: 'comp_rt_99c31b...',
+      refresh_token_expires_in: 2592000,
       scope: 'read,write',
       company_name: '민스튜디오 엔터테인먼트',
       company_id: 1,
@@ -194,7 +196,6 @@ export default function B2BApiDocumentationPage() {
     }
   };
 
-  // 선택된 API 명세를 드래그/복사하기 좋은 Markdown 텍스트로 생성
   const generateApiMarkdownSpec = (api: ApiEndpoint) => {
     return `### [${api.method}] ${api.title}
 - **URL**: http://localhost:3000${api.path}
@@ -210,9 +211,16 @@ ${JSON.stringify(api.responseExample || {}, null, 2)}
 \`\`\``;
   };
 
-  // 전체 API 명세를 한 번에 복사하기 좋은 텍스트로 생성
   const generateFullMarkdownDoc = () => {
-    return API_LIST.map((api, idx) => `## ${idx + 1}. ${api.title}
+    return `==================================================
+⏰ B2B OAuth 2.0 토큰 유효시간 & 만료 정책 안내
+==================================================
+1. Access Token 유효시간: 24시간 (86,400초, expires_in: 86400)
+2. Refresh Token 유효시간: 30일 (2,592,000초, refresh_token_expires_in: 2592000)
+3. 토큰 만료 시: HTTP 401 Unauthorized 에러 반환
+4. 만료 대응: POST /api/oauth/token 을 다시 호출하여 24시간 새로운 Access Token 발급
+
+` + API_LIST.map((api, idx) => `## ${idx + 1}. ${api.title}
 - **Method**: ${api.method}
 - **URL**: http://localhost:3000${api.path}
 - **Description**: ${api.description}
@@ -252,7 +260,7 @@ ${JSON.stringify(api.responseExample || {}, null, 2)}
           </div>
         </div>
 
-        {/* Tab Switcher (Playground vs 드래그/복사 텍스트 명세) */}
+        {/* Tab Switcher */}
         <div className="flex items-center space-x-3">
           <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
             <button
@@ -281,171 +289,200 @@ ${JSON.stringify(api.responseExample || {}, null, 2)}
 
       {/* Main Content View */}
       {activeTab === 'playground' ? (
-        <main className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Navigation Panel */}
-          <div className="lg:col-span-4 space-y-4">
-            <div className="flex space-x-1 p-1 bg-slate-900/90 rounded-xl border border-slate-800">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`flex-1 py-1.5 text-[11px] font-medium rounded-lg transition-all ${
-                    activeCategory === cat
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+        <main className="max-w-7xl mx-auto p-6 space-y-6">
+          {/* ⏰ Token TTL Policy Announcement Banner Card */}
+          <div className="bg-gradient-to-r from-blue-950/60 via-indigo-950/40 to-slate-900/60 border border-blue-500/30 rounded-2xl p-5 backdrop-blur-sm grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div className="flex items-start space-x-3">
+              <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 font-bold text-base">⏱️</div>
+              <div>
+                <h4 className="font-bold text-slate-200 text-sm">Access Token 유효시간</h4>
+                <p className="text-blue-300 font-mono mt-0.5 font-bold">24시간 (86,400초)</p>
+                <p className="text-[11px] text-slate-400 mt-1">응답 필드 `expires_in: 86400` 로 제공됩니다.</p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3">
+              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 font-bold text-base">🔑</div>
+              <div>
+                <h4 className="font-bold text-slate-200 text-sm">Refresh Token 유효시간</h4>
+                <p className="text-emerald-300 font-mono mt-0.5 font-bold">30일 (2,592,000초)</p>
+                <p className="text-[11px] text-slate-400 mt-1">응답 `refresh_token_expires_in: 2592000` 로 제공됩니다.</p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3">
+              <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 font-bold text-base">⚠️</div>
+              <div>
+                <h4 className="font-bold text-slate-200 text-sm">만료 시 재발급 방법</h4>
+                <p className="text-amber-300 font-mono mt-0.5">POST /api/oauth/token 재호출</p>
+                <p className="text-[11px] text-slate-400 mt-1">Client ID/Secret으로 언제든 24시간 새 토큰 발급</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left Navigation Panel */}
+            <div className="lg:col-span-4 space-y-4">
+              <div className="flex space-x-1 p-1 bg-slate-900/90 rounded-xl border border-slate-800">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`flex-1 py-1.5 text-[11px] font-medium rounded-lg transition-all ${
+                      activeCategory === cat
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto pr-1">
+                {filteredApis.map((api, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => handleSelectApi(api)}
+                    className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 ${
+                      selectedApi.path === api.path && selectedApi.method === api.method
+                        ? 'bg-blue-950/40 border-blue-500/50 shadow-lg shadow-blue-500/5'
+                        : 'bg-slate-900/40 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/80'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2 mb-1.5">
+                      <span
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                          api.method === 'GET'
+                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                            : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        }`}
+                      >
+                        {api.method}
+                      </span>
+                      <span className="text-xs font-mono text-slate-300 font-medium truncate">
+                        {api.path}
+                      </span>
+                      {api.authRequired && (
+                        <span className="ml-auto text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                          🔒 Token
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-sm font-semibold text-slate-200">{api.title}</h3>
+                    <p className="text-xs text-slate-400 mt-1 line-clamp-2">{api.description}</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto pr-1">
-              {filteredApis.map((api, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => handleSelectApi(api)}
-                  className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 ${
-                    selectedApi.path === api.path && selectedApi.method === api.method
-                      ? 'bg-blue-950/40 border-blue-500/50 shadow-lg shadow-blue-500/5'
-                      : 'bg-slate-900/40 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/80'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2 mb-1.5">
+            {/* Right Console Panel */}
+            <div className="lg:col-span-8 space-y-6">
+              <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 backdrop-blur-sm relative">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-3">
                     <span
-                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
-                        api.method === 'GET'
+                      className={`text-xs font-extrabold px-2.5 py-1 rounded-lg ${
+                        selectedApi.method === 'GET'
                           ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                           : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                       }`}
                     >
-                      {api.method}
+                      {selectedApi.method}
                     </span>
-                    <span className="text-xs font-mono text-slate-300 font-medium truncate">
-                      {api.path}
-                    </span>
-                    {api.authRequired && (
-                      <span className="ml-auto text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded">
-                        🔒 Token
-                      </span>
-                    )}
+                    <h2 className="text-xl font-bold text-slate-100">{selectedApi.title}</h2>
                   </div>
-                  <h3 className="text-sm font-semibold text-slate-200">{api.title}</h3>
-                  <p className="text-xs text-slate-400 mt-1 line-clamp-2">{api.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Right Console Panel */}
-          <div className="lg:col-span-8 space-y-6">
-            <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 backdrop-blur-sm relative">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-3">
-                  <span
-                    className={`text-xs font-extrabold px-2.5 py-1 rounded-lg ${
-                      selectedApi.method === 'GET'
-                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                        : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    }`}
-                  >
-                    {selectedApi.method}
-                  </span>
-                  <h2 className="text-xl font-bold text-slate-100">{selectedApi.title}</h2>
-                </div>
-
-                {/* 📋 이 API 명세 복사하기 버튼 */}
-                <button
-                  onClick={handleCopySingleApiSpec}
-                  className="px-3.5 py-1.5 bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-200 text-xs font-bold rounded-xl transition flex items-center space-x-1.5"
-                >
-                  <span>{copiedApiSpec ? '✓ 명세 복사완료!' : '📋 이 API 명세 복사하기'}</span>
-                </button>
-              </div>
-
-              <p className="text-xs font-mono text-blue-400 mb-3">http://localhost:3000{selectedApi.path}</p>
-              <p className="text-sm text-slate-300 leading-relaxed">{selectedApi.description}</p>
-
-              {copiedToken && (
-                <div className="mt-4 p-3 rounded-xl bg-blue-950/60 border border-blue-500/30 text-xs flex justify-between items-center">
-                  <span className="text-blue-300 truncate">
-                    🔑 <strong>최근 발급된 업체 Access Token:</strong> {copiedToken}
-                  </span>
                   <button
-                    onClick={() => {
-                      const headers = { Authorization: `Bearer ${copiedToken}` };
-                      setRequestHeaders(JSON.stringify(headers, null, 2));
-                    }}
-                    className="ml-2 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition"
+                    onClick={handleCopySingleApiSpec}
+                    className="px-3.5 py-1.5 bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-200 text-xs font-bold rounded-xl transition flex items-center space-x-1.5"
                   >
-                    Header에 적용
+                    <span>{copiedApiSpec ? '✓ 명세 복사완료!' : '📋 이 API 명세 복사하기'}</span>
                   </button>
                 </div>
-              )}
-            </div>
 
-            {/* Interactive API Request Playground */}
-            <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-slate-200">⚡ B2B Interactive API Playground</h3>
-                <button
-                  onClick={handleExecuteRequest}
-                  disabled={loading}
-                  className="px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-blue-500/20 flex items-center space-x-2 disabled:opacity-50"
-                >
-                  <span>{loading ? '요청 처리 중...' : 'API 요청 보내기 (Send Request)'}</span>
-                </button>
+                <p className="text-xs font-mono text-blue-400 mb-3">http://localhost:3000{selectedApi.path}</p>
+                <p className="text-sm text-slate-300 leading-relaxed">{selectedApi.description}</p>
+
+                {copiedToken && (
+                  <div className="mt-4 p-3 rounded-xl bg-blue-950/60 border border-blue-500/30 text-xs flex justify-between items-center">
+                    <span className="text-blue-300 truncate">
+                      🔑 <strong>최근 발급된 업체 Access Token (유효시간 24시간):</strong> {copiedToken}
+                    </span>
+                    <button
+                      onClick={() => {
+                        const headers = { Authorization: `Bearer ${copiedToken}` };
+                        setRequestHeaders(JSON.stringify(headers, null, 2));
+                      }}
+                      className="ml-2 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition"
+                    >
+                      Header에 적용
+                    </button>
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Headers (JSON)</label>
-                <textarea
-                  value={requestHeaders}
-                  onChange={(e) => setRequestHeaders(e.target.value)}
-                  rows={3}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-blue-300 focus:outline-none focus:border-blue-500"
-                />
-              </div>
+              {/* Interactive API Request Playground */}
+              <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-200">⚡ B2B Interactive API Playground</h3>
+                  <button
+                    onClick={handleExecuteRequest}
+                    disabled={loading}
+                    className="px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-blue-500/20 flex items-center space-x-2 disabled:opacity-50"
+                  >
+                    <span>{loading ? '요청 처리 중...' : 'API 요청 보내기 (Send Request)'}</span>
+                  </button>
+                </div>
 
-              {selectedApi.method !== 'GET' && (
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Request Body (JSON)</label>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Headers (JSON)</label>
                   <textarea
-                    value={requestBody}
-                    onChange={(e) => setRequestBody(e.target.value)}
-                    rows={5}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-emerald-300 focus:outline-none focus:border-emerald-500"
+                    value={requestHeaders}
+                    onChange={(e) => setRequestHeaders(e.target.value)}
+                    rows={3}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-blue-300 focus:outline-none focus:border-blue-500"
                   />
                 </div>
-              )}
 
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Response Output</label>
-                <pre className="w-full max-h-80 overflow-y-auto bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-200 whitespace-pre-wrap">
-                  {responseOutput}
-                </pre>
-              </div>
-            </div>
+                {selectedApi.method !== 'GET' && (
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">Request Body (JSON)</label>
+                    <textarea
+                      value={requestBody}
+                      onChange={(e) => setRequestBody(e.target.value)}
+                      rows={5}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-emerald-300 focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                )}
 
-            {/* Quick Copyable API Specification Card */}
-            <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 space-y-3">
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-bold text-slate-200">
-                  📄 드래그해서 바로 긁어갈 수 있는 API 텍스트 명세 (Copy-Friendly)
-                </h3>
-                <span className="text-[10px] text-slate-400">마우스 드래그 선택 또는 복사 가능</span>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Response Output</label>
+                  <pre className="w-full max-h-80 overflow-y-auto bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-200 whitespace-pre-wrap">
+                    {responseOutput}
+                  </pre>
+                </div>
               </div>
-              <textarea
-                readOnly
-                value={generateApiMarkdownSpec(selectedApi)}
-                rows={10}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-300 select-all focus:outline-none focus:border-blue-500"
-              />
+
+              {/* Copyable Specification Textarea */}
+              <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-sm font-bold text-slate-200">
+                    📄 드래그해서 바로 긁어갈 수 있는 API 텍스트 명세 (Copy-Friendly)
+                  </h3>
+                  <span className="text-[10px] text-slate-400">마우스 드래그 선택 또는 복사 가능</span>
+                </div>
+                <textarea
+                  readOnly
+                  value={generateApiMarkdownSpec(selectedApi)}
+                  rows={10}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-300 select-all focus:outline-none focus:border-blue-500"
+                />
+              </div>
             </div>
           </div>
         </main>
       ) : (
-        /* Full Text Documentation View (통째로 마우스 긁기 매우 용이한 전용 뷰) */
+        /* Full Text Documentation View */
         <main className="max-w-6xl mx-auto p-6 space-y-6">
           <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 flex justify-between items-center">
             <div>
