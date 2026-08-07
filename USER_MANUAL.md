@@ -97,5 +97,61 @@ class MovieApiClient {
     });
     return await res.json();
   }
+
+  // 4. TODO 목록 조회 (GET /api/v1/todos)
+  async getTodos(isCompleted) {
+    const headers = await this.getAuthHeaders();
+    let url = `${this.baseUrl}/api/v1/todos`;
+    if (isCompleted) url += `?is_completed=${isCompleted}`;
+    const res = await fetch(url, { headers });
+    return await res.json();
+  }
+
+  // 5. TODO 신규 등록 (POST /api/v1/todos)
+  async createTodo(title) {
+    const headers = await this.getAuthHeaders();
+    const res = await fetch(`${this.baseUrl}/api/v1/todos`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ title }),
+    });
+    return await res.json();
+  }
+
+  // 6. TODO 수정 및 완료/체크 상태 변경 (PATCH /api/v1/todos/:id)
+  async updateTodo(todoId, updateData) {
+    // updateData예시: { title: "수정제목", is_completed: "Y" }
+    const headers = await this.getAuthHeaders();
+    const res = await fetch(`${this.baseUrl}/api/v1/todos/${todoId}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(updateData),
+    });
+    return await res.json();
+  }
+
+  // 7. TODO 삭제 (DELETE /api/v1/todos/:id)
+  async deleteTodo(todoId) {
+    const headers = await this.getAuthHeaders();
+    const res = await fetch(`${this.baseUrl}/api/v1/todos/${todoId}`, {
+      method: 'DELETE',
+      headers,
+    });
+    return await res.json();
+  }
 }
 ```
+
+---
+
+## 📝 2. TODO API CRUD REST 엔드포인트 규격
+
+| 기능 | HTTP Method | Endpoint | Authorization | Request Body |
+| :--- | :--- | :--- | :--- | :--- |
+| **TODO 목록 조회** | `GET` | `/api/v1/todos` | `Bearer <token>` | `?is_completed=Y` or `N` (선택) |
+| **신규 TODO 등록** | `POST` | `/api/v1/todos` | `Bearer <token>` | `{ "title": "할일 내용" }` (필수) |
+| **TODO 수정/체크버튼 갱신**| `PATCH` / `PUT` | `/api/v1/todos/:id` | `Bearer <token>` | `{ "title": "수정내용", "is_completed": "Y" }` |
+| **TODO 삭제** | `DELETE` | `/api/v1/todos/:id` | `Bearer <token>` | - |
+
+
+

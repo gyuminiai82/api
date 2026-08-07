@@ -3,10 +3,10 @@
 import { useState } from 'react';
 
 interface ApiEndpoint {
-  method: 'GET' | 'POST' | 'DELETE' | 'PUT';
+  method: 'GET' | 'POST' | 'DELETE' | 'PUT' | 'PATCH';
   path: string;
   title: string;
-  category: 'B2B OAuth 2.0 Auth' | 'B2B Movie API' | 'Company Portal';
+  category: 'B2B OAuth 2.0 Auth' | 'B2B Movie API' | 'B2B TODO API' | 'Company Portal';
   authRequired: boolean;
   description: string;
   headers?: Record<string, string>;
@@ -125,6 +125,96 @@ const API_LIST: ApiEndpoint[] = [
       ],
     },
   },
+  {
+    category: 'B2B TODO API',
+    method: 'GET',
+    path: '/api/v1/todos',
+    title: '5. 업체 TODO 목록 조회 (업체 토큰 필수)',
+    authRequired: true,
+    description: 'Bearer 토큰을 이용해 해당 업체의 TODO 목록을 조회합니다. ?is_completed=Y 또는 N으로 완료 필터링 가능합니다.',
+    headers: {
+      Authorization: 'Bearer <COMPANY_ACCESS_TOKEN>',
+    },
+    responseExample: {
+      success: true,
+      message: '[민스튜디오 엔터테인먼트] 업체의 TODO 목록 조회가 완료되었습니다.',
+      company: {
+        id: 1,
+        name: '민스튜디오 엔터테인먼트',
+        clientId: 'partner_minstudio',
+      },
+      count: 2,
+      data: [
+        {
+          TODO_ID: 1,
+          COMPANY_ID: 1,
+          TITLE: 'OAuth 2.0 API 연동 테스트',
+          IS_COMPLETED: 'N',
+          CREATED_AT: '2026-08-07T18:50:00.000Z',
+          COMPLETED_AT: null,
+        },
+      ],
+    },
+  },
+  {
+    category: 'B2B TODO API',
+    method: 'POST',
+    path: '/api/v1/todos',
+    title: '6. 신규 TODO 등록 (업체 토큰 필수)',
+    authRequired: true,
+    description: '발급받은 업체 전용 Bearer 토큰을 이용해 자사 할일(TODO)을 등록합니다.',
+    headers: {
+      Authorization: 'Bearer <COMPANY_ACCESS_TOKEN>',
+      'Content-Type': 'application/json',
+    },
+    bodyExample: {
+      title: 'B2B API 파트너 문서 검토 및 연동 마무리',
+    },
+    responseExample: {
+      success: true,
+      message: '[민스튜디오 엔터테인먼트] 신규 TODO가 성공적으로 등록되었습니다.',
+      todo: {
+        company_name: '민스튜디오 엔터테인먼트',
+        title: 'B2B API 파트너 문서 검토 및 연동 마무리',
+        is_completed: 'N',
+      },
+    },
+  },
+  {
+    category: 'B2B TODO API',
+    method: 'PATCH',
+    path: '/api/v1/todos/1',
+    title: '7. TODO 수정 및 완료/체크 상태 변경 (업체 토큰 필수)',
+    authRequired: true,
+    description: '할일 제목 수정 및 완료/체크박스 여부(is_completed: Y/N) 상태를 갱신합니다.',
+    headers: {
+      Authorization: 'Bearer <COMPANY_ACCESS_TOKEN>',
+      'Content-Type': 'application/json',
+    },
+    bodyExample: {
+      title: 'B2B API 파트너 문서 검토 및 연동 완료',
+      is_completed: 'Y',
+    },
+    responseExample: {
+      success: true,
+      message: '[민스튜디오 엔터테인먼트] TODO (ID: 1)가 성공적으로 수정되었습니다.',
+    },
+  },
+  {
+    category: 'B2B TODO API',
+    method: 'DELETE',
+    path: '/api/v1/todos/1',
+    title: '8. TODO 항목 삭제 (업체 토큰 필수)',
+    authRequired: true,
+    description: '본인 업체 소유의 TODO 항목을 삭제합니다.',
+    headers: {
+      Authorization: 'Bearer <COMPANY_ACCESS_TOKEN>',
+    },
+    responseExample: {
+      success: true,
+      message: '[민스튜디오 엔터테인먼트] TODO (ID: 1)가 성공적으로 삭제되었습니다.',
+    },
+  },
 ];
 
 export default function B2BApiDocumentationPage() {
@@ -142,7 +232,7 @@ export default function B2BApiDocumentationPage() {
   const [copiedToken, setCopiedToken] = useState<string>('');
   const [copiedApiSpec, setCopiedApiSpec] = useState<boolean>(false);
 
-  const categories = ['All', 'B2B OAuth 2.0 Auth', 'B2B Movie API', 'Company Portal'];
+  const categories = ['All', 'B2B OAuth 2.0 Auth', 'B2B Movie API', 'B2B TODO API', 'Company Portal'];
 
   const filteredApis =
     activeCategory === 'All'

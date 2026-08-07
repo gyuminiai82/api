@@ -124,6 +124,74 @@
           "200": { "description": "프로필 및 호출 로그 조회 성공" }
         }
       }
+    },
+    "/api/v1/todos": {
+      "get": {
+        "summary": "업체 TODO 목록 조회",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "is_completed", "in": "query", "description": "완료여부 필터 (Y/N)", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "TODO 목록 조회 성공" }
+        }
+      },
+      "post": {
+        "summary": "신규 TODO 등록",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title"],
+                "properties": {
+                  "title": { "type": "string", "example": "API 연동 테스트 진행하기" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "TODO 등록 성공" }
+        }
+      }
+    },
+    "/api/v1/todos/{id}": {
+      "patch": {
+        "summary": "TODO 수정 및 완료 상태 변경",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string", "example": "수정된 할일 제목" },
+                  "is_completed": { "type": "string", "example": "Y" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "수정 성공" }
+        }
+      },
+      "delete": {
+        "summary": "TODO 항목 삭제",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "삭제 성공" }
+        }
+      }
     }
   },
   "components": {
@@ -193,3 +261,19 @@
 
 ### 4. `GET /api/v1/companies/me` (업체 정보 및 호출 로그 조회)
 - **Headers**: `Authorization: Bearer <ACCESS_TOKEN>`
+
+### 5. `GET /api/v1/todos` (TODO 목록 조회)
+- **Headers**: `Authorization: Bearer <ACCESS_TOKEN>`
+- **Query Params**: `is_completed=Y` 또는 `N` (선택)
+
+### 6. `POST /api/v1/todos` (신규 TODO 등록)
+- **Headers**: `Authorization: Bearer <ACCESS_TOKEN>`, `Content-Type: application/json`
+- **Request Body**: `{ "title": "할일 내용 (필수)" }`
+
+### 7. `PATCH /api/v1/todos/:id` (TODO 수정 및 완료 상태 변경)
+- **Headers**: `Authorization: Bearer <ACCESS_TOKEN>`, `Content-Type: application/json`
+- **Request Body**: `{ "title": "수정할 내용", "is_completed": "Y" }`
+
+### 8. `DELETE /api/v1/todos/:id` (TODO 삭제)
+- **Headers**: `Authorization: Bearer <ACCESS_TOKEN>`
+
