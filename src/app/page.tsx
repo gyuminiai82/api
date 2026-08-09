@@ -35,7 +35,7 @@ const API_LIST: ApiEndpoint[] = [
       token_type: 'Bearer',
       expires_in: 86400,
       refresh_token: 'comp_rt_99c31b...',
-      refresh_token_expires_in: 2592000,
+      refresh_token_expires_in: 600,
       scope: 'read,write',
       company_name: '민스튜디오 엔터테인먼트',
       company_id: 1,
@@ -306,7 +306,7 @@ ${JSON.stringify(api.responseExample || {}, null, 2)}
 ⏰ B2B OAuth 2.0 토큰 유효시간 & 만료 정책 안내
 ==================================================
 1. Access Token 유효시간: 24시간 (86,400초, expires_in: 86400)
-2. Refresh Token 유효시간: 30일 (2,592,000초, refresh_token_expires_in: 2592000)
+2. Refresh Token 유효시간: 10분 (600초, refresh_token_expires_in: 600)
 3. 토큰 만료 시: HTTP 401 Unauthorized 에러 반환
 4. 만료 대응: POST /api/oauth/token 을 다시 호출하여 24시간 새로운 Access Token 발급
 
@@ -394,8 +394,8 @@ ${JSON.stringify(api.responseExample || {}, null, 2)}
               <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 font-bold text-base">🔑</div>
               <div>
                 <h4 className="font-bold text-slate-200 text-sm">Refresh Token 유효시간</h4>
-                <p className="text-emerald-300 font-mono mt-0.5 font-bold">30일 (2,592,000초)</p>
-                <p className="text-[11px] text-slate-400 mt-1">응답 `refresh_token_expires_in: 2592000` 로 제공됩니다.</p>
+                <p className="text-emerald-300 font-mono mt-0.5 font-bold">10분 (600초)</p>
+                <p className="text-[11px] text-slate-400 mt-1">응답 `refresh_token_expires_in: 600` 로 제공됩니다.</p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
