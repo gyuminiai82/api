@@ -1,5 +1,8 @@
 import { executeQuery } from './db';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'study_api_jwt_secret_key_2026';
 
 export interface CompanyTokenInfo {
   tokenId: number;
@@ -17,7 +20,32 @@ export function generateTokenString(prefix: string = 'token'): string {
 }
 
 /**
- * Authorization: Bearer <company_access_token> 헤더 검증 함수 (B2B 업체용)
+ * JWT Access Token 발급 함수
+ */
+export function generateAccessTokenJWT(
+  payload: {
+    companyId: number;
+    companyName: string;
+    clientId: string;
+    scope: string;
+  },
+  expiresInSeconds: number = 10
+): string {
+  return jwt.sign(
+    {
+      companyId: payload.companyId,
+      companyName: payload.companyName,
+      clientId: payload.clientId,
+      scope: payload.scope,
+      type: 'access_token',
+    },
+    JWT_SECRET,
+    { expiresIn: expiresInSeconds }
+  );
+}
+
+/**
+ * Authorization: Bearer <company_access_token> JWT 검증 함수 (B2B 업체용)
  */
 export async function verifyCompanyToken(authHeader: string | null): Promise<CompanyTokenInfo> {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -26,6 +54,18 @@ export async function verifyCompanyToken(authHeader: string | null): Promise<Com
 
   const token = authHeader.substring(7).trim();
 
+  // 1. JWT 서명 및 만료시간 1차 검증
+  let decodedPayload: any;
+  try {
+    decodedPayload = jwt.verify(token, JWT_SECRET);
+  } catch (err: any) {
+    if (err.name === 'TokenExpiredError') {
+      throw new Error('만료된 업체 Access Token입니다. 토큰을 재발급받으세요.');
+    }
+    throw new Error('유효하지 않은 JWT Access Token입니다.');
+  }
+
+  // 2. DB 조회를 통한 폐기 여부(IS_REVOKED) 및 업체 상태(STATUS) 2차 검증
   const query = `
     SELECT 
       t.TOKEN_ID, t.ACCESS_TOKEN, t.CLIENT_ID, t.COMPANY_ID, t.SCOPE,
@@ -52,20 +92,15 @@ export async function verifyCompanyToken(authHeader: string | null): Promise<Com
     throw new Error('해당 업체 계정이 비활성화(SUSPENDED) 상태입니다.');
   }
 
-  const expiresAt = new Date(row.ACCESS_TOKEN_EXPIRES_AT);
-  if (expiresAt.getTime() < Date.now()) {
-    throw new Error('만료된 업체 Access Token입니다. 토큰을 재발급받으세요.');
-  }
-
   return {
     tokenId: row.TOKEN_ID,
-    accessToken: row.ACCESS_TOKEN,
-    clientId: row.CLIENT_ID,
-    companyId: row.COMPANY_ID,
-    companyName: row.COMPANY_NAME,
+    accessToken: token,
+    clientId: decodedPayload.clientId || row.CLIENT_ID,
+    companyId: decodedPayload.companyId || row.COMPANY_ID,
+    companyName: decodedPayload.companyName || row.COMPANY_NAME,
     status: row.STATUS,
-    scope: row.SCOPE,
-    expiresAt,
+    scope: decodedPayload.scope || row.SCOPE,
+    expiresAt: new Date(decodedPayload.exp * 1000),
   };
 }
 
@@ -84,3 +119,4 @@ export async function logCompanyApiCall(companyId: number, endpoint: string, met
     console.error('API Call Logging Failed:', err);
   }
 }
+

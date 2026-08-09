@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery } from '@/lib/db';
-import { generateTokenString } from '@/lib/auth';
+import { generateTokenString, generateAccessTokenJWT } from '@/lib/auth';
 
 /**
  * POST /api/oauth/token
@@ -76,10 +76,6 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // 새 Access Token 발급 (유효시간: 10초)
-      const newAccessToken = generateTokenString('comp_at');
-      const accessExpiresAt = new Date(Date.now() + 10 * 1000); // 10초 후 만료 (테스트용)
-
       // Refresh Token 만료 확인 (10분 유효)
       if (tokenRow.REFRESH_TOKEN_EXPIRES_AT) {
         const refreshExpiresAt = new Date(tokenRow.REFRESH_TOKEN_EXPIRES_AT);
@@ -90,6 +86,18 @@ export async function POST(req: NextRequest) {
           );
         }
       }
+
+      // 새 JWT Access Token 발급 (유효시간: 10초)
+      const newAccessToken = generateAccessTokenJWT(
+        {
+          companyId: tokenRow.COMPANY_ID,
+          companyName: tokenRow.COMPANY_NAME,
+          clientId: tokenRow.CLIENT_ID,
+          scope: tokenRow.SCOPE || 'read,write',
+        },
+        10
+      );
+      const accessExpiresAt = new Date(Date.now() + 10 * 1000); // 10초 후 만료 (DB 기록용)
 
       await executeQuery(
         `UPDATE API_COMPANY_TOKENS 
@@ -149,8 +157,16 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Access Token (테스트용: 10초) 및 Refresh Token (10분) 발급
-      const accessToken = generateTokenString('comp_at');
+      // JWT Access Token (10초) 및 Refresh Token (10분) 발급
+      const accessToken = generateAccessTokenJWT(
+        {
+          companyId: company.COMPANY_ID,
+          companyName: company.COMPANY_NAME,
+          clientId: client_id,
+          scope: 'read,write',
+        },
+        10
+      );
       const refreshToken = generateTokenString('comp_rt');
       const accessExpiresAt = new Date(Date.now() + 10 * 1000); // 10초
       const refreshExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10분 (600초)
