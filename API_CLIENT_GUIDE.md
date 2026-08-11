@@ -134,15 +134,15 @@ export const boardApi = {
   },
 
   /**
-   * 게시글 수정
+   * 게시글/답글 수정 (제목, 본문, 작성자명)
    */
-  async updatePost(postId: number, payload: { title: string; content: string }) {
+  async updatePost(postId: number, payload: { title?: string; content?: string; author_name?: string }) {
     const response = await apiClient.put(`/api/v1/posts/${postId}`, payload);
     return response.data;
   },
 
   /**
-   * 게시글 삭제 (논리 삭제)
+   * 게시글 및 하위 계층 답글 삭제 (논리 삭제)
    */
   async deletePost(postId: number) {
     const response = await apiClient.delete(`/api/v1/posts/${postId}`);
@@ -172,15 +172,26 @@ export const boardApi = {
   },
 
   /**
-   * 댓글 수정
+   * 댓글 또는 대댓글 단건 상세 조회
    */
-  async updateComment(commentId: number, content: string) {
-    const response = await apiClient.put(`/api/v1/comments/${commentId}`, { content });
+  async getCommentDetail(commentId: number) {
+    const response = await apiClient.get<{
+      success: boolean;
+      data: Comment;
+    }>(`/api/v1/comments/${commentId}`);
     return response.data;
   },
 
   /**
-   * 댓글 삭제 (논리 삭제)
+   * 댓글 또는 대댓글 수정 (내용, 작성자명)
+   */
+  async updateComment(commentId: number, payload: { content?: string; author_name?: string }) {
+    const response = await apiClient.put(`/api/v1/comments/${commentId}`, payload);
+    return response.data;
+  },
+
+  /**
+   * 댓글 및 하위 대댓글 삭제 (논리 삭제)
    */
   async deleteComment(commentId: number) {
     const response = await apiClient.delete(`/api/v1/comments/${commentId}`);

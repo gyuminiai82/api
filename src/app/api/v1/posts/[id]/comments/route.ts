@@ -66,7 +66,7 @@ export async function GET(req: NextRequest, { params }: Context) {
           FROM API_COMMENTS
           WHERE POST_ID = :postId AND IS_DELETED = 'N'
           START WITH PARENT_ID IS NULL
-          CONNECT BY PRIOR COMMENT_ID = PARENT_ID
+          CONNECT BY NOCYCLE PRIOR COMMENT_ID = PARENT_ID
           ORDER SIBLINGS BY COMMENT_ID ASC
         ) a WHERE ROWNUM <= :maxRow
       ) WHERE rnum > :minRow

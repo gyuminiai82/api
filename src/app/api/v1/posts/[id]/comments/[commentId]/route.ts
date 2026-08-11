@@ -3,20 +3,21 @@ import { executeQuery } from '@/lib/db';
 import { verifyCompanyToken, logCompanyApiCall } from '@/lib/auth';
 
 interface Context {
-  params: Promise<{ commentId: string }>;
+  params: Promise<{ id: string; commentId: string }>;
 }
 
 /**
- * GET /api/v1/comments/[commentId]
- * 댓글 / 대댓글 단건 상세 조회 API
+ * GET /api/v1/posts/[id]/comments/[commentId]
+ * 특정 게시글의 특정 댓글/대댓글 상세 조회 API
  */
 export async function GET(req: NextRequest, { params }: Context) {
   try {
-    const { commentId: cId } = await params;
+    const { id, commentId: cId } = await params;
+    const postId = parseInt(id, 10);
     const commentId = parseInt(cId, 10);
 
-    if (isNaN(commentId)) {
-      return NextResponse.json({ error: 'invalid_id', message: '유효하지 않은 댓글 ID입니다.' }, { status: 400 });
+    if (isNaN(postId) || isNaN(commentId)) {
+      return NextResponse.json({ error: 'invalid_id', message: '유효하지 않은 ID입니다.' }, { status: 400 });
     }
 
     const sql = `
@@ -34,14 +35,14 @@ export async function GET(req: NextRequest, { params }: Context) {
         TO_CHAR(CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT,
         TO_CHAR(UPDATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS UPDATED_AT
       FROM API_COMMENTS
-      WHERE COMMENT_ID = :commentId AND IS_DELETED = 'N'
+      WHERE COMMENT_ID = :commentId AND POST_ID = :postId AND IS_DELETED = 'N'
     `;
 
-    const result = await executeQuery<any>(sql, { commentId });
+    const result = await executeQuery<any>(sql, { commentId, postId });
 
     if (!result.rows || result.rows.length === 0) {
       return NextResponse.json(
-        { error: 'not_found', message: '댓글을 찾을 수 없거나 삭제되었습니다.' },
+        { error: 'not_found', message: '댓글을 찾을 수 없거나 이미 삭제되었습니다.' },
         { status: 404 }
       );
     }
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest, { params }: Context) {
       data: result.rows[0],
     });
   } catch (error: any) {
-    console.error('Fetch comment detail failed:', error);
+    console.error('Fetch nested comment detail failed:', error);
     return NextResponse.json(
       { error: 'server_error', message: error?.message || '댓글 조회 중 오류가 발생했습니다.' },
       { status: 500 }
@@ -60,16 +61,17 @@ export async function GET(req: NextRequest, { params }: Context) {
 }
 
 /**
- * PUT /api/v1/comments/[commentId]
- * 댓글 / 대댓글 내용 및 작성자 수정 API
+ * PUT /api/v1/posts/[id]/comments/[commentId]
+ * 특정 게시글의 특정 댓글/대댓글 수정 API
  */
 export async function PUT(req: NextRequest, { params }: Context) {
   try {
-    const { commentId: cId } = await params;
+    const { id, commentId: cId } = await params;
+    const postId = parseInt(id, 10);
     const commentId = parseInt(cId, 10);
 
-    if (isNaN(commentId)) {
-      return NextResponse.json({ error: 'invalid_id', message: '유효하지 않은 댓글 ID입니다.' }, { status: 400 });
+    if (isNaN(postId) || isNaN(commentId)) {
+      return NextResponse.json({ error: 'invalid_id', message: '유효하지 않은 ID입니다.' }, { status: 400 });
     }
 
     let companyInfo = null;
@@ -92,11 +94,11 @@ export async function PUT(req: NextRequest, { params }: Context) {
       );
     }
 
-    const checkSql = `SELECT COMPANY_ID, CONTENT, AUTHOR_NAME FROM API_COMMENTS WHERE COMMENT_ID = :commentId AND IS_DELETED = 'N'`;
-    const checkResult = await executeQuery<any>(checkSql, { commentId });
+    const checkSql = `SELECT COMPANY_ID, CONTENT, AUTHOR_NAME FROM API_COMMENTS WHERE COMMENT_ID = :commentId AND POST_ID = :postId AND IS_DELETED = 'N'`;
+    const checkResult = await executeQuery<any>(checkSql, { commentId, postId });
 
     if (!checkResult.rows || checkResult.rows.length === 0) {
-      return NextResponse.json({ error: 'not_found', message: '수정할 댓글이 존재하지 않거나 삭제되었습니다.' }, { status: 404 });
+      return NextResponse.json({ error: 'not_found', message: '수정할 댓글이 존재하지 않습니다.' }, { status: 404 });
     }
 
     const comment = checkResult.rows[0];
@@ -112,22 +114,22 @@ export async function PUT(req: NextRequest, { params }: Context) {
       SET CONTENT = :content,
           AUTHOR_NAME = :authorName,
           UPDATED_AT = CURRENT_TIMESTAMP
-      WHERE COMMENT_ID = :commentId
+      WHERE COMMENT_ID = :commentId AND POST_ID = :postId
     `;
 
-    await executeQuery(updateSql, { content: newContent, authorName: newAuthorName, commentId }, { autoCommit: true });
+    await executeQuery(updateSql, { content: newContent, authorName: newAuthorName, commentId, postId }, { autoCommit: true });
 
     if (companyInfo) {
-      await logCompanyApiCall(companyInfo.companyId, `/api/v1/comments/${commentId}`, 'PUT', 200);
+      await logCompanyApiCall(companyInfo.companyId, `/api/v1/posts/${postId}/comments/${commentId}`, 'PUT', 200);
     }
 
     return NextResponse.json({
       success: true,
       message: '댓글이 성공적으로 수정되었습니다.',
-      data: { commentId, content: newContent, author_name: newAuthorName },
+      data: { postId, commentId, content: newContent, author_name: newAuthorName },
     });
   } catch (error: any) {
-    console.error('Update comment failed:', error);
+    console.error('Update nested comment failed:', error);
     return NextResponse.json(
       { error: 'server_error', message: error?.message || '댓글 수정 중 오류가 발생했습니다.' },
       { status: 500 }
@@ -136,16 +138,17 @@ export async function PUT(req: NextRequest, { params }: Context) {
 }
 
 /**
- * DELETE /api/v1/comments/[commentId]
- * 댓글 및 하위 대댓글 논리 삭제 API
+ * DELETE /api/v1/posts/[id]/comments/[commentId]
+ * 특정 게시글의 특정 댓글/대댓글 삭제 API (논리 삭제)
  */
 export async function DELETE(req: NextRequest, { params }: Context) {
   try {
-    const { commentId: cId } = await params;
+    const { id, commentId: cId } = await params;
+    const postId = parseInt(id, 10);
     const commentId = parseInt(cId, 10);
 
-    if (isNaN(commentId)) {
-      return NextResponse.json({ error: 'invalid_id', message: '유효하지 않은 댓글 ID입니다.' }, { status: 400 });
+    if (isNaN(postId) || isNaN(commentId)) {
+      return NextResponse.json({ error: 'invalid_id', message: '유효하지 않은 ID입니다.' }, { status: 400 });
     }
 
     let companyInfo = null;
@@ -158,8 +161,8 @@ export async function DELETE(req: NextRequest, { params }: Context) {
       }
     }
 
-    const checkSql = `SELECT COMPANY_ID FROM API_COMMENTS WHERE COMMENT_ID = :commentId AND IS_DELETED = 'N'`;
-    const checkResult = await executeQuery<any>(checkSql, { commentId });
+    const checkSql = `SELECT COMPANY_ID FROM API_COMMENTS WHERE COMMENT_ID = :commentId AND POST_ID = :postId AND IS_DELETED = 'N'`;
+    const checkResult = await executeQuery<any>(checkSql, { commentId, postId });
 
     if (!checkResult.rows || checkResult.rows.length === 0) {
       return NextResponse.json({ error: 'not_found', message: '삭제할 댓글이 존재하지 않거나 이미 삭제되었습니다.' }, { status: 404 });
@@ -170,12 +173,11 @@ export async function DELETE(req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: 'forbidden', message: '본인이 작성한 댓글만 삭제할 수 있습니다.' }, { status: 403 });
     }
 
-    // 댓글 및 하위 대댓글 함께 논리 삭제
-    const deleteSql = `UPDATE API_COMMENTS SET IS_DELETED = 'Y', UPDATED_AT = CURRENT_TIMESTAMP WHERE COMMENT_ID = :commentId OR PARENT_ID = :commentId`;
-    await executeQuery(deleteSql, { commentId }, { autoCommit: true });
+    const deleteSql = `UPDATE API_COMMENTS SET IS_DELETED = 'Y', UPDATED_AT = CURRENT_TIMESTAMP WHERE (COMMENT_ID = :commentId OR PARENT_ID = :commentId) AND POST_ID = :postId`;
+    await executeQuery(deleteSql, { commentId, postId }, { autoCommit: true });
 
     if (companyInfo) {
-      await logCompanyApiCall(companyInfo.companyId, `/api/v1/comments/${commentId}`, 'DELETE', 200);
+      await logCompanyApiCall(companyInfo.companyId, `/api/v1/posts/${postId}/comments/${commentId}`, 'DELETE', 200);
     }
 
     return NextResponse.json({
@@ -183,7 +185,7 @@ export async function DELETE(req: NextRequest, { params }: Context) {
       message: '댓글(및 하위 대댓글)이 성공적으로 삭제되었습니다.',
     });
   } catch (error: any) {
-    console.error('Delete comment failed:', error);
+    console.error('Delete nested comment failed:', error);
     return NextResponse.json(
       { error: 'server_error', message: error?.message || '댓글 삭제 중 오류가 발생했습니다.' },
       { status: 500 }

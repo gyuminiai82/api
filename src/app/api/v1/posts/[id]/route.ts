@@ -103,21 +103,21 @@ export async function PUT(req: NextRequest, { params }: Context) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { title, content } = body;
+    const { title, content, author_name } = body;
 
-    if (!title || !content) {
+    if (!title && !content && !author_name) {
       return NextResponse.json(
-        { error: 'invalid_request', message: '수정할 title(제목)과 content(내용)을 입력해주세요.' },
+        { error: 'invalid_request', message: '수정할 title(제목), content(내용), author_name(작성자) 중 하나 이상을 입력해주세요.' },
         { status: 400 }
       );
     }
 
     // 게시글 존재 및 권한 체크
-    const checkSql = `SELECT COMPANY_ID FROM API_POSTS WHERE POST_ID = :postId AND IS_DELETED = 'N'`;
+    const checkSql = `SELECT COMPANY_ID, TITLE, CONTENT, AUTHOR_NAME FROM API_POSTS WHERE POST_ID = :postId AND IS_DELETED = 'N'`;
     const checkResult = await executeQuery<any>(checkSql, { postId });
 
     if (!checkResult.rows || checkResult.rows.length === 0) {
-      return NextResponse.json({ error: 'not_found', message: '수정할 게시글이 존재하지 않습니다.' }, { status: 404 });
+      return NextResponse.json({ error: 'not_found', message: '수정할 게시글(또는 답글)이 존재하지 않습니다.' }, { status: 404 });
     }
 
     const post = checkResult.rows[0];
@@ -125,15 +125,20 @@ export async function PUT(req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: 'forbidden', message: '본인이 작성한 게시글만 수정할 수 있습니다.' }, { status: 403 });
     }
 
+    const newTitle = title !== undefined ? title : post.TITLE;
+    const newContent = content !== undefined ? content : post.CONTENT;
+    const newAuthorName = author_name !== undefined ? author_name : post.AUTHOR_NAME;
+
     const updateSql = `
       UPDATE API_POSTS
       SET TITLE = :title,
           CONTENT = :content,
+          AUTHOR_NAME = :authorName,
           UPDATED_AT = CURRENT_TIMESTAMP
       WHERE POST_ID = :postId
     `;
 
-    await executeQuery(updateSql, { title, content, postId }, { autoCommit: true });
+    await executeQuery(updateSql, { title: newTitle, content: newContent, authorName: newAuthorName, postId }, { autoCommit: true });
 
     if (companyInfo) {
       await logCompanyApiCall(companyInfo.companyId, `/api/v1/posts/${postId}`, 'PUT', 200);
@@ -141,8 +146,8 @@ export async function PUT(req: NextRequest, { params }: Context) {
 
     return NextResponse.json({
       success: true,
-      message: '게시글이 성공적으로 수정되었습니다.',
-      data: { postId, title, content },
+      message: '게시글(또는 답글)이 성공적으로 수정되었습니다.',
+      data: { postId, title: newTitle, content: newContent, author_name: newAuthorName },
     });
   } catch (error: any) {
     console.error('Update post failed:', error);
@@ -155,7 +160,7 @@ export async function PUT(req: NextRequest, { params }: Context) {
 
 /**
  * DELETE /api/v1/posts/[id]
- * 게시글 논리 삭제 API
+ * 게시글 및 하위 답글 논리 삭제 API
  */
 export async function DELETE(req: NextRequest, { params }: Context) {
   try {
@@ -188,7 +193,8 @@ export async function DELETE(req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: 'forbidden', message: '본인이 작성한 게시글만 삭제할 수 있습니다.' }, { status: 403 });
     }
 
-    const deleteSql = `UPDATE API_POSTS SET IS_DELETED = 'Y', UPDATED_AT = CURRENT_TIMESTAMP WHERE POST_ID = :postId`;
+    // 대상 게시글 및 하위 계층 답글 함께 논리 삭제
+    const deleteSql = `UPDATE API_POSTS SET IS_DELETED = 'Y', UPDATED_AT = CURRENT_TIMESTAMP WHERE POST_ID = :postId OR PARENT_ID = :postId`;
     await executeQuery(deleteSql, { postId }, { autoCommit: true });
 
     if (companyInfo) {
@@ -197,7 +203,7 @@ export async function DELETE(req: NextRequest, { params }: Context) {
 
     return NextResponse.json({
       success: true,
-      message: '게시글이 성공적으로 삭제되었습니다.',
+      message: '게시글(및 하위 답글)이 성공적으로 삭제되었습니다.',
     });
   } catch (error: any) {
     console.error('Delete post failed:', error);

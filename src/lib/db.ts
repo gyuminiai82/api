@@ -5,6 +5,8 @@ import oracledb from 'oracledb';
 oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
 // 실(운영) DB 안전을 위해 자동 커밋(autoCommit)을 기본적으로 끕니다.
 oracledb.autoCommit = false;
+// Oracle CLOB 컬럼 조회 시 node-oracledb Lob 스트림 대신 문자열(string)로 자동 변환하여 JSON 직렬화 순환 참조 오류 해결
+oracledb.fetchAsString = [oracledb.CLOB];
 
 let pool: oracledb.Pool | null = null;
 

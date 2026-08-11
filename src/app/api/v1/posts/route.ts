@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
           FROM API_POSTS p
           WHERE IS_DELETED = 'N' ${searchCondition}
           START WITH PARENT_ID IS NULL
-          CONNECT BY PRIOR POST_ID = PARENT_ID
+          CONNECT BY NOCYCLE PRIOR POST_ID = PARENT_ID
           ORDER SIBLINGS BY POST_ID DESC
         ) a WHERE ROWNUM <= :maxRow
       ) WHERE rnum > :minRow
