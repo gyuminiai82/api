@@ -5,11 +5,11 @@
     "width": 2000,
     "height": 2000,
     "scrollTop": 0,
-    "scrollLeft": -375.5869,
-    "zoomLevel": 0.9,
+    "scrollLeft": -800,
+    "zoomLevel": 1,
     "show": 511,
     "database": 8,
-    "databaseName": "B2B_PARTNER_MOVIE_API",
+    "databaseName": "HIERARCHICAL_BOARD_API",
     "canvasType": "ERD",
     "language": 1,
     "tableNameCase": 4,
@@ -33,13 +33,15 @@
     "tableIds": [
       "tbl-api-companies",
       "tbl-api-company-tokens",
-      "tbl-api-movies",
+      "tbl-api-posts",
+      "tbl-api-comments",
       "tbl-api-call-logs",
       "tbl-api-todo"
     ],
     "relationshipIds": [
       "rel-companies-tokens",
-      "rel-companies-movies",
+      "rel-companies-posts",
+      "rel-posts-comments",
       "rel-companies-logs",
       "rel-companies-todos"
     ],
@@ -110,8 +112,8 @@
           "col-act-is-revoked"
         ],
         "ui": {
-          "x": 905.5556,
-          "y": 63.3333,
+          "x": 900,
+          "y": 50,
           "zIndex": 2,
           "widthName": 129,
           "widthComment": 300,
@@ -122,47 +124,102 @@
           "createAt": 1786096399300
         }
       },
-      "tbl-api-movies": {
-        "id": "tbl-api-movies",
-        "name": "API_MOVIES",
-        "comment": "B2B 파트너 업체별 소유/배급 영화 데이터 자원",
+      "tbl-api-posts": {
+        "id": "tbl-api-posts",
+        "name": "API_POSTS",
+        "comment": "계층형 게시판 게시글 자원 (원글 및 답글)",
         "columnIds": [
-          "col-am-movie-id",
-          "col-am-company-id",
-          "col-am-title",
-          "col-am-original-title",
-          "col-am-release-date",
-          "col-am-running-time",
-          "col-am-plot",
-          "col-am-created-at"
+          "col-ap-post-id",
+          "col-ap-company-id",
+          "col-ap-title",
+          "col-ap-content",
+          "col-ap-author-name",
+          "col-ap-parent-id",
+          "col-ap-group-id",
+          "col-ap-depth",
+          "col-ap-sort-order",
+          "col-ap-view-count",
+          "col-ap-is-deleted",
+          "col-ap-created-at",
+          "col-ap-updated-at"
         ],
         "seqColumnIds": [
-          "col-am-movie-id",
-          "col-am-company-id",
-          "col-am-title",
-          "col-am-original-title",
-          "col-am-release-date",
-          "col-am-running-time",
-          "col-am-plot",
-          "col-am-created-at"
+          "col-ap-post-id",
+          "col-ap-company-id",
+          "col-ap-title",
+          "col-ap-content",
+          "col-ap-author-name",
+          "col-ap-parent-id",
+          "col-ap-group-id",
+          "col-ap-depth",
+          "col-ap-sort-order",
+          "col-ap-view-count",
+          "col-ap-is-deleted",
+          "col-ap-created-at",
+          "col-ap-updated-at"
         ],
         "ui": {
           "x": 50,
-          "y": 400,
+          "y": 420,
           "zIndex": 3,
-          "widthName": 67,
-          "widthComment": 251,
+          "widthName": 60,
+          "widthComment": 221,
           "color": ""
         },
         "meta": {
-          "updateAt": 1786096399300,
-          "createAt": 1786096399300
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "tbl-api-comments": {
+        "id": "tbl-api-comments",
+        "name": "API_COMMENTS",
+        "comment": "게시글 하위 계층형 답글/댓글 자원",
+        "columnIds": [
+          "col-cm-comment-id",
+          "col-cm-post-id",
+          "col-cm-company-id",
+          "col-cm-author-name",
+          "col-cm-content",
+          "col-cm-parent-id",
+          "col-cm-group-id",
+          "col-cm-depth",
+          "col-cm-sort-order",
+          "col-cm-is-deleted",
+          "col-cm-created-at",
+          "col-cm-updated-at"
+        ],
+        "seqColumnIds": [
+          "col-cm-comment-id",
+          "col-cm-post-id",
+          "col-cm-company-id",
+          "col-cm-author-name",
+          "col-cm-content",
+          "col-cm-parent-id",
+          "col-cm-group-id",
+          "col-cm-depth",
+          "col-cm-sort-order",
+          "col-cm-is-deleted",
+          "col-cm-created-at",
+          "col-cm-updated-at"
+        ],
+        "ui": {
+          "x": 520,
+          "y": 420,
+          "zIndex": 4,
+          "widthName": 90,
+          "widthComment": 188,
+          "color": ""
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
         }
       },
       "tbl-api-call-logs": {
         "id": "tbl-api-call-logs",
         "name": "API_CALL_LOGS",
-        "comment": "B2B 파트너 업체별 API 실시간 호출 및 트래킹 로그",
+        "comment": "B2B 파트너 업체별 API 실시간 호출 로그",
         "columnIds": [
           "col-acl-log-id",
           "col-acl-company-id",
@@ -180,11 +237,11 @@
           "col-acl-created-at"
         ],
         "ui": {
-          "x": 912.2222,
-          "y": 493.3333,
-          "zIndex": 4,
+          "x": 900,
+          "y": 420,
+          "zIndex": 5,
           "widthName": 85,
-          "widthComment": 270,
+          "widthComment": 216,
           "color": ""
         },
         "meta": {
@@ -195,7 +252,7 @@
       "tbl-api-todo": {
         "id": "tbl-api-todo",
         "name": "API_TODO",
-        "comment": "B2B 파트너 업체별 할일(TODO) 데이터 자원",
+        "comment": "B2B 파트너 업체별 할일(TODO) 데이터",
         "columnIds": [
           "col-at-todo-id",
           "col-at-company-id",
@@ -213,11 +270,11 @@
           "col-at-completed-at"
         ],
         "ui": {
-          "x": 484.4445,
-          "y": 770,
-          "zIndex": 5,
+          "x": 900,
+          "y": 720,
+          "zIndex": 6,
           "widthName": 60,
-          "widthComment": 234,
+          "widthComment": 207,
           "color": ""
         },
         "meta": {
@@ -236,7 +293,7 @@
         "default": "",
         "options": 11,
         "ui": {
-          "keys": 0,
+          "keys": 1,
           "widthName": 75,
           "widthComment": 112,
           "widthDataType": 60,
@@ -291,14 +348,14 @@
         "id": "col-ac-client-id",
         "tableId": "tbl-api-companies",
         "name": "CLIENT_ID",
-        "comment": "OAuth 2.0 Client ID (API 인증 키)",
+        "comment": "OAuth 2.0 Client ID",
         "dataType": "VARCHAR2(100)",
         "default": "",
         "options": 12,
         "ui": {
           "keys": 0,
           "widthName": 60,
-          "widthComment": 174,
+          "widthComment": 104,
           "widthDataType": 87,
           "widthDefault": 60
         },
@@ -311,14 +368,14 @@
         "id": "col-ac-client-secret",
         "tableId": "tbl-api-companies",
         "name": "CLIENT_SECRET",
-        "comment": "OAuth 2.0 Client Secret (API 시크릿 키)",
+        "comment": "OAuth 2.0 Client Secret",
         "dataType": "VARCHAR2(255)",
         "default": "",
         "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 84,
-          "widthComment": 207,
+          "widthComment": 125,
           "widthDataType": 87,
           "widthDefault": 60
         },
@@ -331,14 +388,14 @@
         "id": "col-ac-status",
         "tableId": "tbl-api-companies",
         "name": "STATUS",
-        "comment": "업체 계정 상태 (ACTIVE / SUSPENDED)",
+        "comment": "업체 계정 상태",
         "dataType": "VARCHAR2(20)",
         "default": "'ACTIVE'",
         "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 60,
-          "widthComment": 206,
+          "widthComment": 81,
           "widthDataType": 81,
           "widthDefault": 60
         },
@@ -351,14 +408,14 @@
         "id": "col-ac-daily-limit",
         "tableId": "tbl-api-companies",
         "name": "DAILY_LIMIT",
-        "comment": "업체별 일일 API 호출 한도 건수",
+        "comment": "일일 호출 한도",
         "dataType": "NUMBER",
         "default": "10000",
         "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 67,
-          "widthComment": 168,
+          "widthComment": 81,
           "widthDataType": 60,
           "widthDefault": 60
         },
@@ -371,14 +428,14 @@
         "id": "col-ac-created-at",
         "tableId": "tbl-api-companies",
         "name": "CREATED_AT",
-        "comment": "업체 등록 일시",
+        "comment": "등록 일시",
         "dataType": "TIMESTAMP",
         "default": "CURRENT_TIMESTAMP",
         "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 68,
-          "widthComment": 81,
+          "widthComment": 60,
           "widthDataType": 65,
           "widthDefault": 122
         },
@@ -396,7 +453,7 @@
         "default": "",
         "options": 11,
         "ui": {
-          "keys": 0,
+          "keys": 1,
           "widthName": 60,
           "widthComment": 97,
           "widthDataType": 60,
@@ -411,14 +468,14 @@
         "id": "col-act-access-token",
         "tableId": "tbl-api-company-tokens",
         "name": "ACCESS_TOKEN",
-        "comment": "발급된 24시간 Bearer Access Token 문자열",
+        "comment": "Access Token",
         "dataType": "VARCHAR2(500)",
         "default": "",
         "options": 12,
         "ui": {
           "keys": 0,
           "widthName": 85,
-          "widthComment": 228,
+          "widthComment": 72,
           "widthDataType": 87,
           "widthDefault": 60
         },
@@ -431,14 +488,14 @@
         "id": "col-act-refresh-token",
         "tableId": "tbl-api-company-tokens",
         "name": "REFRESH_TOKEN",
-        "comment": "토큰 갱신용 Refresh Token 문자열 (선택)",
+        "comment": "Refresh Token",
         "dataType": "VARCHAR2(500)",
         "default": "",
         "options": 4,
         "ui": {
           "keys": 0,
           "widthName": 91,
-          "widthComment": 216,
+          "widthComment": 76,
           "widthDataType": 87,
           "widthDefault": 60
         },
@@ -451,14 +508,14 @@
         "id": "col-act-company-id",
         "tableId": "tbl-api-company-tokens",
         "name": "COMPANY_ID",
-        "comment": "토큰을 소유한 파트너 업체 ID (FK)",
+        "comment": "업체 ID (FK)",
         "dataType": "NUMBER",
         "default": "",
         "options": 8,
         "ui": {
           "keys": 2,
           "widthName": 75,
-          "widthComment": 182,
+          "widthComment": 64,
           "widthDataType": 60,
           "widthDefault": 60
         },
@@ -471,14 +528,14 @@
         "id": "col-act-client-id",
         "tableId": "tbl-api-company-tokens",
         "name": "CLIENT_ID",
-        "comment": "발급에 사용된 Client ID",
+        "comment": "Client ID",
         "dataType": "VARCHAR2(100)",
         "default": "",
         "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 60,
-          "widthComment": 126,
+          "widthComment": 60,
           "widthDataType": 87,
           "widthDefault": 60
         },
@@ -491,14 +548,14 @@
         "id": "col-act-scope",
         "tableId": "tbl-api-company-tokens",
         "name": "SCOPE",
-        "comment": "토큰 접근 권한 범위 (read, write)",
+        "comment": "권한 범위",
         "dataType": "VARCHAR2(200)",
         "default": "'read,write'",
         "options": 0,
         "ui": {
           "keys": 0,
           "widthName": 60,
-          "widthComment": 174,
+          "widthComment": 60,
           "widthDataType": 87,
           "widthDefault": 60
         },
@@ -511,14 +568,14 @@
         "id": "col-act-expires-at",
         "tableId": "tbl-api-company-tokens",
         "name": "ACCESS_TOKEN_EXPIRES_AT",
-        "comment": "Access Token 만료 일시",
+        "comment": "만료 일시",
         "dataType": "TIMESTAMP",
         "default": "",
         "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 150,
-          "widthComment": 126,
+          "widthComment": 60,
           "widthDataType": 65,
           "widthDefault": 60
         },
@@ -531,180 +588,520 @@
         "id": "col-act-is-revoked",
         "tableId": "tbl-api-company-tokens",
         "name": "IS_REVOKED",
-        "comment": "토큰 폐기 여부 (Y/N)",
+        "comment": "폐기 여부",
+        "dataType": "CHAR(1)",
+        "default": "'N'",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 67,
+          "widthComment": 60,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786096411674,
+          "createAt": 1786096399300
+        }
+      },
+      "col-ap-post-id": {
+        "id": "col-ap-post-id",
+        "tableId": "tbl-api-posts",
+        "name": "POST_ID",
+        "comment": "게시글 고유 PK ID",
+        "dataType": "NUMBER",
+        "default": "",
+        "options": 11,
+        "ui": {
+          "keys": 1,
+          "widthName": 60,
+          "widthComment": 97,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-ap-company-id": {
+        "id": "col-ap-company-id",
+        "tableId": "tbl-api-posts",
+        "name": "COMPANY_ID",
+        "comment": "작성자 파트너 업체 ID (FK)",
+        "dataType": "NUMBER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 2,
+          "widthName": 75,
+          "widthComment": 143,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-ap-title": {
+        "id": "col-ap-title",
+        "tableId": "tbl-api-posts",
+        "name": "TITLE",
+        "comment": "게시글 제목",
+        "dataType": "VARCHAR2(300)",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 65,
+          "widthDataType": 87,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-ap-content": {
+        "id": "col-ap-content",
+        "tableId": "tbl-api-posts",
+        "name": "CONTENT",
+        "comment": "게시글 본문",
+        "dataType": "CLOB",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 65,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-ap-author-name": {
+        "id": "col-ap-author-name",
+        "tableId": "tbl-api-posts",
+        "name": "AUTHOR_NAME",
+        "comment": "작성자 이름",
+        "dataType": "VARCHAR2(100)",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 87,
+          "widthComment": 65,
+          "widthDataType": 87,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-ap-parent-id": {
+        "id": "col-ap-parent-id",
+        "tableId": "tbl-api-posts",
+        "name": "PARENT_ID",
+        "comment": "상위 게시글 ID (원글: NULL)",
+        "dataType": "NUMBER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 61,
+          "widthComment": 149,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-ap-group-id": {
+        "id": "col-ap-group-id",
+        "tableId": "tbl-api-posts",
+        "name": "GROUP_ID",
+        "comment": "최상위 원글 그룹 ID",
+        "dataType": "NUMBER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 107,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-ap-depth": {
+        "id": "col-ap-depth",
+        "tableId": "tbl-api-posts",
+        "name": "DEPTH",
+        "comment": "계층 깊이 (원글:0, 답글:1...)",
+        "dataType": "NUMBER",
+        "default": "0",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 144,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-ap-sort-order": {
+        "id": "col-ap-sort-order",
+        "tableId": "tbl-api-posts",
+        "name": "SORT_ORDER",
+        "comment": "그룹 내 정렬 순서",
+        "dataType": "NUMBER",
+        "default": "0",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 73,
+          "widthComment": 96,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-ap-view-count": {
+        "id": "col-ap-view-count",
+        "tableId": "tbl-api-posts",
+        "name": "VIEW_COUNT",
+        "comment": "조회수",
+        "dataType": "NUMBER",
+        "default": "0",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 75,
+          "widthComment": 60,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-ap-is-deleted": {
+        "id": "col-ap-is-deleted",
+        "tableId": "tbl-api-posts",
+        "name": "IS_DELETED",
+        "comment": "삭제 여부 (Y/N)",
         "dataType": "CHAR(1)",
         "default": "'N'",
         "options": 8,
         "ui": {
           "keys": 0,
-          "widthName": 67,
-          "widthComment": 111,
+          "widthName": 64,
+          "widthComment": 84,
           "widthDataType": 60,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1786096399300,
-          "createAt": 1786096399300
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
         }
       },
-      "col-am-movie-id": {
-        "id": "col-am-movie-id",
-        "tableId": "tbl-api-movies",
-        "name": "MOVIE_ID",
-        "comment": "영화 고유 PK ID",
-        "dataType": "NUMBER",
-        "default": "",
-        "options": 11,
-        "ui": {
-          "keys": 0,
-          "widthName": 60,
-          "widthComment": 85,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1786096399300,
-          "createAt": 1786096399300
-        }
-      },
-      "col-am-company-id": {
-        "id": "col-am-company-id",
-        "tableId": "tbl-api-movies",
-        "name": "COMPANY_ID",
-        "comment": "영화 데이터를 배급/소유하는 파트너 업체 ID (FK)",
-        "dataType": "NUMBER",
-        "default": "",
-        "options": 8,
-        "ui": {
-          "keys": 2,
-          "widthName": 75,
-          "widthComment": 262,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1786096399300,
-          "createAt": 1786096399300
-        }
-      },
-      "col-am-title": {
-        "id": "col-am-title",
-        "tableId": "tbl-api-movies",
-        "name": "TITLE",
-        "comment": "영화 제목",
-        "dataType": "VARCHAR2(200)",
-        "default": "",
-        "options": 8,
-        "ui": {
-          "keys": 0,
-          "widthName": 60,
-          "widthComment": 60,
-          "widthDataType": 87,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1786096399300,
-          "createAt": 1786096399300
-        }
-      },
-      "col-am-original-title": {
-        "id": "col-am-original-title",
-        "tableId": "tbl-api-movies",
-        "name": "ORIGINAL_TITLE",
-        "comment": "영화 원제",
-        "dataType": "VARCHAR2(200)",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 88,
-          "widthComment": 60,
-          "widthDataType": 87,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1786096399300,
-          "createAt": 1786096399300
-        }
-      },
-      "col-am-release-date": {
-        "id": "col-am-release-date",
-        "tableId": "tbl-api-movies",
-        "name": "RELEASE_DATE",
-        "comment": "개봉 일자",
-        "dataType": "DATE",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 79,
-          "widthComment": 60,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1786096399300,
-          "createAt": 1786096399300
-        }
-      },
-      "col-am-running-time": {
-        "id": "col-am-running-time",
-        "tableId": "tbl-api-movies",
-        "name": "RUNNING_TIME",
-        "comment": "상영 시간 (분 단위)",
-        "dataType": "NUMBER",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 87,
-          "widthComment": 103,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1786096399300,
-          "createAt": 1786096399300
-        }
-      },
-      "col-am-plot": {
-        "id": "col-am-plot",
-        "tableId": "tbl-api-movies",
-        "name": "PLOT",
-        "comment": "영화 줄거리 상세",
-        "dataType": "CLOB",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 60,
-          "widthComment": 93,
-          "widthDataType": 60,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1786096399300,
-          "createAt": 1786096399300
-        }
-      },
-      "col-am-created-at": {
-        "id": "col-am-created-at",
-        "tableId": "tbl-api-movies",
+      "col-ap-created-at": {
+        "id": "col-ap-created-at",
+        "tableId": "tbl-api-posts",
         "name": "CREATED_AT",
-        "comment": "영화 등록 일시",
+        "comment": "작성 일시",
         "dataType": "TIMESTAMP",
         "default": "CURRENT_TIMESTAMP",
         "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 68,
-          "widthComment": 81,
+          "widthComment": 60,
           "widthDataType": 65,
           "widthDefault": 122
         },
         "meta": {
-          "updateAt": 1786096399300,
-          "createAt": 1786096399300
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-ap-updated-at": {
+        "id": "col-ap-updated-at",
+        "tableId": "tbl-api-posts",
+        "name": "UPDATED_AT",
+        "comment": "수정 일시",
+        "dataType": "TIMESTAMP",
+        "default": "CURRENT_TIMESTAMP",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 71,
+          "widthComment": 60,
+          "widthDataType": 65,
+          "widthDefault": 122
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-cm-comment-id": {
+        "id": "col-cm-comment-id",
+        "tableId": "tbl-api-comments",
+        "name": "COMMENT_ID",
+        "comment": "댓글 고유 PK ID",
+        "dataType": "NUMBER",
+        "default": "",
+        "options": 11,
+        "ui": {
+          "keys": 1,
+          "widthName": 78,
+          "widthComment": 85,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-cm-post-id": {
+        "id": "col-cm-post-id",
+        "tableId": "tbl-api-comments",
+        "name": "POST_ID",
+        "comment": "대상 게시글 ID (FK)",
+        "dataType": "NUMBER",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 2,
+          "widthName": 60,
+          "widthComment": 104,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-cm-company-id": {
+        "id": "col-cm-company-id",
+        "tableId": "tbl-api-comments",
+        "name": "COMPANY_ID",
+        "comment": "작성자 파트너 업체 ID (선택)",
+        "dataType": "NUMBER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 75,
+          "widthComment": 154,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-cm-author-name": {
+        "id": "col-cm-author-name",
+        "tableId": "tbl-api-comments",
+        "name": "AUTHOR_NAME",
+        "comment": "댓글 작성자 이름",
+        "dataType": "VARCHAR2(100)",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 87,
+          "widthComment": 93,
+          "widthDataType": 87,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-cm-content": {
+        "id": "col-cm-content",
+        "tableId": "tbl-api-comments",
+        "name": "CONTENT",
+        "comment": "댓글 내용",
+        "dataType": "VARCHAR2(2000)",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 60,
+          "widthDataType": 94,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-cm-parent-id": {
+        "id": "col-cm-parent-id",
+        "tableId": "tbl-api-comments",
+        "name": "PARENT_ID",
+        "comment": "상위 댓글 ID (최상위: NULL)",
+        "dataType": "NUMBER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 61,
+          "widthComment": 149,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-cm-group-id": {
+        "id": "col-cm-group-id",
+        "tableId": "tbl-api-comments",
+        "name": "GROUP_ID",
+        "comment": "최상위 댓글 그룹 ID",
+        "dataType": "NUMBER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 107,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-cm-depth": {
+        "id": "col-cm-depth",
+        "tableId": "tbl-api-comments",
+        "name": "DEPTH",
+        "comment": "댓글 계층 깊이 (0:댓글, 1:대댓글)",
+        "dataType": "NUMBER",
+        "default": "0",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 175,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-cm-sort-order": {
+        "id": "col-cm-sort-order",
+        "tableId": "tbl-api-comments",
+        "name": "SORT_ORDER",
+        "comment": "그룹 내 정렬 순서",
+        "dataType": "NUMBER",
+        "default": "0",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 73,
+          "widthComment": 96,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-cm-is-deleted": {
+        "id": "col-cm-is-deleted",
+        "tableId": "tbl-api-comments",
+        "name": "IS_DELETED",
+        "comment": "삭제 여부 (Y/N)",
+        "dataType": "CHAR(1)",
+        "default": "'N'",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 64,
+          "widthComment": 84,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-cm-created-at": {
+        "id": "col-cm-created-at",
+        "tableId": "tbl-api-comments",
+        "name": "CREATED_AT",
+        "comment": "작성 일시",
+        "dataType": "TIMESTAMP",
+        "default": "CURRENT_TIMESTAMP",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 68,
+          "widthComment": 60,
+          "widthDataType": 65,
+          "widthDefault": 122
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "col-cm-updated-at": {
+        "id": "col-cm-updated-at",
+        "tableId": "tbl-api-comments",
+        "name": "UPDATED_AT",
+        "comment": "수정 일시",
+        "dataType": "TIMESTAMP",
+        "default": "CURRENT_TIMESTAMP",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 71,
+          "widthComment": 60,
+          "widthDataType": 65,
+          "widthDefault": 122
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
         }
       },
       "col-acl-log-id": {
@@ -716,7 +1113,7 @@
         "default": "",
         "options": 11,
         "ui": {
-          "keys": 0,
+          "keys": 1,
           "widthName": 60,
           "widthComment": 85,
           "widthDataType": 60,
@@ -731,14 +1128,14 @@
         "id": "col-acl-company-id",
         "tableId": "tbl-api-call-logs",
         "name": "COMPANY_ID",
-        "comment": "API를 호출한 파트너 업체 ID (FK)",
+        "comment": "API 호출 파트너 업체 ID (FK)",
         "dataType": "NUMBER",
         "default": "",
         "options": 8,
         "ui": {
           "keys": 2,
           "widthName": 75,
-          "widthComment": 176,
+          "widthComment": 152,
           "widthDataType": 60,
           "widthDefault": 60
         },
@@ -751,14 +1148,14 @@
         "id": "col-acl-endpoint",
         "tableId": "tbl-api-call-logs",
         "name": "ENDPOINT",
-        "comment": "호출된 API 엔드포인트 경로",
+        "comment": "호출 API 경로",
         "dataType": "VARCHAR2(200)",
         "default": "",
         "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 60,
-          "widthComment": 150,
+          "widthComment": 74,
           "widthDataType": 87,
           "widthDefault": 60
         },
@@ -771,14 +1168,14 @@
         "id": "col-acl-http-method",
         "tableId": "tbl-api-call-logs",
         "name": "HTTP_METHOD",
-        "comment": "HTTP 메서드 (GET, POST 등)",
+        "comment": "HTTP 메서드",
         "dataType": "VARCHAR2(10)",
         "default": "",
         "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 84,
-          "widthComment": 150,
+          "widthComment": 69,
           "widthDataType": 81,
           "widthDefault": 60
         },
@@ -791,14 +1188,14 @@
         "id": "col-acl-status-code",
         "tableId": "tbl-api-call-logs",
         "name": "STATUS_CODE",
-        "comment": "HTTP 응답 상태 코드 (200, 401 등)",
+        "comment": "HTTP 상태 코드",
         "dataType": "NUMBER",
         "default": "",
         "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 77,
-          "widthComment": 182,
+          "widthComment": 85,
           "widthDataType": 60,
           "widthDefault": 60
         },
@@ -811,14 +1208,14 @@
         "id": "col-acl-created-at",
         "tableId": "tbl-api-call-logs",
         "name": "CREATED_AT",
-        "comment": "API 호출 일시",
+        "comment": "호출 일시",
         "dataType": "TIMESTAMP",
         "default": "CURRENT_TIMESTAMP",
         "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 68,
-          "widthComment": 74,
+          "widthComment": 60,
           "widthDataType": 65,
           "widthDefault": 122
         },
@@ -851,14 +1248,14 @@
         "id": "col-at-company-id",
         "tableId": "tbl-api-todo",
         "name": "COMPANY_ID",
-        "comment": "TODO를 소유한 파트너 업체 ID (FK)",
+        "comment": "소유 파트너 업체 ID (FK)",
         "dataType": "NUMBER",
         "default": "",
         "options": 8,
         "ui": {
           "keys": 2,
           "widthName": 75,
-          "widthComment": 190,
+          "widthComment": 131,
           "widthDataType": 60,
           "widthDefault": 60
         },
@@ -911,14 +1308,14 @@
         "id": "col-at-created-at",
         "tableId": "tbl-api-todo",
         "name": "CREATED_AT",
-        "comment": "할일 등록 일시",
+        "comment": "등록 일시",
         "dataType": "TIMESTAMP",
         "default": "CURRENT_TIMESTAMP",
         "options": 8,
         "ui": {
           "keys": 0,
           "widthName": 68,
-          "widthComment": 81,
+          "widthComment": 60,
           "widthDataType": 65,
           "widthDefault": 122
         },
@@ -931,14 +1328,14 @@
         "id": "col-at-completed-at",
         "tableId": "tbl-api-todo",
         "name": "COMPLETED_AT",
-        "comment": "할일 완료 일시",
+        "comment": "완료 일시",
         "dataType": "TIMESTAMP",
         "default": "",
         "options": 0,
         "ui": {
           "keys": 0,
           "widthName": 86,
-          "widthComment": 81,
+          "widthComment": 60,
           "widthDataType": 65,
           "widthDefault": 60
         },
@@ -959,8 +1356,8 @@
           "columnIds": [
             "col-ac-company-id"
           ],
-          "x": 752,
-          "y": 112,
+          "x": 670,
+          "y": 91.33333333333334,
           "direction": 2
         },
         "end": {
@@ -968,8 +1365,8 @@
           "columnIds": [
             "col-act-company-id"
           ],
-          "x": 905.5556,
-          "y": 187.3333,
+          "x": 900,
+          "y": 174,
           "direction": 1
         },
         "meta": {
@@ -977,32 +1374,60 @@
           "createAt": 1786096399300
         }
       },
-      "rel-companies-movies": {
-        "id": "rel-companies-movies",
+      "rel-companies-posts": {
+        "id": "rel-companies-posts",
         "identification": false,
         "relationshipType": 4,
-        "startRelationshipType": 2,
+        "startRelationshipType": 1,
         "start": {
           "tableId": "tbl-api-companies",
           "columnIds": [
             "col-ac-company-id"
           ],
-          "x": 225.5,
+          "x": 360,
           "y": 298,
           "direction": 8
         },
         "end": {
-          "tableId": "tbl-api-movies",
+          "tableId": "tbl-api-posts",
           "columnIds": [
-            "col-am-company-id"
+            "col-ap-company-id"
           ],
-          "x": 418.5,
-          "y": 400,
+          "x": 361.5,
+          "y": 420,
           "direction": 4
         },
         "meta": {
-          "updateAt": 1786096399300,
-          "createAt": 1786096399300
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
+        }
+      },
+      "rel-posts-comments": {
+        "id": "rel-posts-comments",
+        "identification": false,
+        "relationshipType": 4,
+        "startRelationshipType": 2,
+        "start": {
+          "tableId": "tbl-api-posts",
+          "columnIds": [
+            "col-ap-post-id"
+          ],
+          "x": 673,
+          "y": 604,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "tbl-api-comments",
+          "columnIds": [
+            "col-cm-post-id"
+          ],
+          "x": 520,
+          "y": 592,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1786142000000,
+          "createAt": 1786142000000
         }
       },
       "rel-companies-logs": {
@@ -1015,8 +1440,8 @@
           "columnIds": [
             "col-ac-company-id"
           ],
-          "x": 752,
-          "y": 236,
+          "x": 670,
+          "y": 174,
           "direction": 2
         },
         "end": {
@@ -1024,8 +1449,8 @@
           "columnIds": [
             "col-acl-company-id"
           ],
-          "x": 912.2222,
-          "y": 593.3333,
+          "x": 900,
+          "y": 520,
           "direction": 1
         },
         "meta": {
@@ -1043,17 +1468,17 @@
           "columnIds": [
             "col-ac-company-id"
           ],
-          "x": 576.5,
-          "y": 298,
-          "direction": 8
+          "x": 670,
+          "y": 256.6666666666667,
+          "direction": 2
         },
         "end": {
           "tableId": "tbl-api-todo",
           "columnIds": [
             "col-at-company-id"
           ],
-          "x": 484.4445,
-          "y": 870,
+          "x": 900,
+          "y": 820,
           "direction": 1
         },
         "meta": {
