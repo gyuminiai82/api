@@ -8,10 +8,20 @@ interface Context {
 
 /**
  * GET /api/v1/comments/[commentId]
- * 댓글 / 대댓글 단건 상세 조회 API
+ * OAuth 2.0 Bearer 인증 기반 댓글 / 대댓글 단건 상세 조회 API
  */
 export async function GET(req: NextRequest, { params }: Context) {
   try {
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'unauthorized', message: '댓글 조회를 위해 Authorization: Bearer <company_token> 이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    const companyInfo = await verifyCompanyToken(authHeader);
+
     const { commentId: cId } = await params;
     const commentId = parseInt(cId, 10);
 
@@ -46,6 +56,8 @@ export async function GET(req: NextRequest, { params }: Context) {
       );
     }
 
+    await logCompanyApiCall(companyInfo.companyId, `/api/v1/comments/${commentId}`, 'GET', 200);
+
     return NextResponse.json({
       success: true,
       data: result.rows[0],
@@ -53,33 +65,33 @@ export async function GET(req: NextRequest, { params }: Context) {
   } catch (error: any) {
     console.error('Fetch comment detail failed:', error);
     return NextResponse.json(
-      { error: 'server_error', message: error?.message || '댓글 조회 중 오류가 발생했습니다.' },
-      { status: 500 }
+      { error: 'unauthorized', message: error?.message || '댓글 조회 중 인증 오류가 발생했습니다.' },
+      { status: 401 }
     );
   }
 }
 
 /**
  * PUT /api/v1/comments/[commentId]
- * 댓글 / 대댓글 내용 및 작성자 수정 API
+ * OAuth 2.0 Bearer 인증 기반 댓글 / 대댓글 수정 API
  */
 export async function PUT(req: NextRequest, { params }: Context) {
   try {
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'unauthorized', message: '댓글 수정을 위해 Authorization: Bearer <company_token> 이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    const companyInfo = await verifyCompanyToken(authHeader);
+
     const { commentId: cId } = await params;
     const commentId = parseInt(cId, 10);
 
     if (isNaN(commentId)) {
       return NextResponse.json({ error: 'invalid_id', message: '유효하지 않은 댓글 ID입니다.' }, { status: 400 });
-    }
-
-    let companyInfo = null;
-    const authHeader = req.headers.get('authorization');
-    if (authHeader) {
-      try {
-        companyInfo = await verifyCompanyToken(authHeader);
-      } catch {
-        // 무시
-      }
     }
 
     const body = await req.json().catch(() => ({}));
@@ -100,8 +112,8 @@ export async function PUT(req: NextRequest, { params }: Context) {
     }
 
     const comment = checkResult.rows[0];
-    if (companyInfo && comment.COMPANY_ID && comment.COMPANY_ID !== companyInfo.companyId) {
-      return NextResponse.json({ error: 'forbidden', message: '본인이 작성한 댓글만 수정할 수 있습니다.' }, { status: 403 });
+    if (comment.COMPANY_ID && comment.COMPANY_ID !== companyInfo.companyId) {
+      return NextResponse.json({ error: 'forbidden', message: '본인 업체가 작성한 댓글만 수정할 수 있습니다.' }, { status: 403 });
     }
 
     const newContent = content !== undefined ? content : comment.CONTENT;
@@ -117,9 +129,7 @@ export async function PUT(req: NextRequest, { params }: Context) {
 
     await executeQuery(updateSql, { content: newContent, authorName: newAuthorName, commentId }, { autoCommit: true });
 
-    if (companyInfo) {
-      await logCompanyApiCall(companyInfo.companyId, `/api/v1/comments/${commentId}`, 'PUT', 200);
-    }
+    await logCompanyApiCall(companyInfo.companyId, `/api/v1/comments/${commentId}`, 'PUT', 200);
 
     return NextResponse.json({
       success: true,
@@ -129,33 +139,33 @@ export async function PUT(req: NextRequest, { params }: Context) {
   } catch (error: any) {
     console.error('Update comment failed:', error);
     return NextResponse.json(
-      { error: 'server_error', message: error?.message || '댓글 수정 중 오류가 발생했습니다.' },
-      { status: 500 }
+      { error: 'unauthorized', message: error?.message || '댓글 수정 중 인증 오류가 발생했습니다.' },
+      { status: 401 }
     );
   }
 }
 
 /**
  * DELETE /api/v1/comments/[commentId]
- * 댓글 및 하위 대댓글 논리 삭제 API
+ * OAuth 2.0 Bearer 인증 기반 댓글 및 하위 대댓글 논리 삭제 API
  */
 export async function DELETE(req: NextRequest, { params }: Context) {
   try {
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'unauthorized', message: '댓글 삭제를 위해 Authorization: Bearer <company_token> 이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    const companyInfo = await verifyCompanyToken(authHeader);
+
     const { commentId: cId } = await params;
     const commentId = parseInt(cId, 10);
 
     if (isNaN(commentId)) {
       return NextResponse.json({ error: 'invalid_id', message: '유효하지 않은 댓글 ID입니다.' }, { status: 400 });
-    }
-
-    let companyInfo = null;
-    const authHeader = req.headers.get('authorization');
-    if (authHeader) {
-      try {
-        companyInfo = await verifyCompanyToken(authHeader);
-      } catch {
-        // 무시
-      }
     }
 
     const checkSql = `SELECT COMPANY_ID FROM API_COMMENTS WHERE COMMENT_ID = :commentId AND IS_DELETED = 'N'`;
@@ -166,17 +176,15 @@ export async function DELETE(req: NextRequest, { params }: Context) {
     }
 
     const comment = checkResult.rows[0];
-    if (companyInfo && comment.COMPANY_ID && comment.COMPANY_ID !== companyInfo.companyId) {
-      return NextResponse.json({ error: 'forbidden', message: '본인이 작성한 댓글만 삭제할 수 있습니다.' }, { status: 403 });
+    if (comment.COMPANY_ID && comment.COMPANY_ID !== companyInfo.companyId) {
+      return NextResponse.json({ error: 'forbidden', message: '본인 업체가 작성한 댓글만 삭제할 수 있습니다.' }, { status: 403 });
     }
 
     // 댓글 및 하위 대댓글 함께 논리 삭제
     const deleteSql = `UPDATE API_COMMENTS SET IS_DELETED = 'Y', UPDATED_AT = CURRENT_TIMESTAMP WHERE COMMENT_ID = :commentId OR PARENT_ID = :commentId`;
     await executeQuery(deleteSql, { commentId }, { autoCommit: true });
 
-    if (companyInfo) {
-      await logCompanyApiCall(companyInfo.companyId, `/api/v1/comments/${commentId}`, 'DELETE', 200);
-    }
+    await logCompanyApiCall(companyInfo.companyId, `/api/v1/comments/${commentId}`, 'DELETE', 200);
 
     return NextResponse.json({
       success: true,
@@ -185,8 +193,8 @@ export async function DELETE(req: NextRequest, { params }: Context) {
   } catch (error: any) {
     console.error('Delete comment failed:', error);
     return NextResponse.json(
-      { error: 'server_error', message: error?.message || '댓글 삭제 중 오류가 발생했습니다.' },
-      { status: 500 }
+      { error: 'unauthorized', message: error?.message || '댓글 삭제 중 인증 오류가 발생했습니다.' },
+      { status: 401 }
     );
   }
 }

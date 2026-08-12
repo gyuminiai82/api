@@ -4,27 +4,26 @@ import { verifyCompanyToken, logCompanyApiCall } from '@/lib/auth';
 
 /**
  * GET /api/v1/posts
- * 페이징 처리 및 검색 기능이 포함된 계층형 게시글 목록 조회 API
+ * OAuth 2.0 Bearer 인증 기반 계층형 게시글 목록 조회 API (페이징 & 검색)
  */
 export async function GET(req: NextRequest) {
   try {
+    // 1. Bearer 토큰 필수 검증
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'unauthorized', message: '게시글 목록 조회를 위해 Authorization: Bearer <company_token> 이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    const companyInfo = await verifyCompanyToken(authHeader);
+
     const { searchParams } = new URL(req.url);
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '10', 10)));
     const search = searchParams.get('search')?.trim() || '';
     const searchType = searchParams.get('searchType') || 'all'; // title, content, author, all
-
-    // 1. Bearer 토큰 검증 (선택사항)
-    let companyInfo = null;
-    const authHeader = req.headers.get('authorization');
-    if (authHeader) {
-      try {
-        companyInfo = await verifyCompanyToken(authHeader);
-        await logCompanyApiCall(companyInfo.companyId, '/api/v1/posts', 'GET', 200);
-      } catch {
-        // 토큰이 없거나 유효하지 않아도 공개 게시글 목록 조회가 가능합니다.
-      }
-    }
 
     const minRow = (page - 1) * limit;
     const maxRow = page * limit;
@@ -89,9 +88,15 @@ export async function GET(req: NextRequest) {
 
     const listResult = await executeQuery<any>(listSql, binds);
 
+    await logCompanyApiCall(companyInfo.companyId, '/api/v1/posts', 'GET', 200);
+
     return NextResponse.json({
       success: true,
       message: '계층형 게시글 목록 조회 성공',
+      company: {
+        id: companyInfo.companyId,
+        name: companyInfo.companyName,
+      },
       pagination: {
         page,
         limit,
@@ -105,28 +110,28 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     console.error('Fetch posts failed:', error);
     return NextResponse.json(
-      { error: 'server_error', message: error?.message || '게시글 목록 조회 중 오류가 발생했습니다.' },
-      { status: 500 }
+      { error: 'unauthorized', message: error?.message || '게시글 목록 조회 중 인증 오류가 발생했습니다.' },
+      { status: 401 }
     );
   }
 }
 
 /**
  * POST /api/v1/posts
- * 신규 게시글 작성 또는 계층형 답글 작성 API
+ * OAuth 2.0 Bearer 인증 기반 신규 게시글 작성 및 계층형 답글 작성 API
  */
 export async function POST(req: NextRequest) {
   try {
-    let companyInfo = null;
+    // 1. Bearer 토큰 필수 검증
     const authHeader = req.headers.get('authorization');
-
-    if (authHeader) {
-      try {
-        companyInfo = await verifyCompanyToken(authHeader);
-      } catch {
-        // Bearer 토큰이 비필수라면 일반 작성자로 생성 가능
-      }
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'unauthorized', message: '게시글 작성을 위해 Authorization: Bearer <company_token> 이 필요합니다.' },
+        { status: 401 }
+      );
     }
+
+    const companyInfo = await verifyCompanyToken(authHeader);
 
     const body = await req.json().catch(() => ({}));
     const { title, content, author_name, parent_id } = body;
@@ -138,14 +143,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const authorName = author_name || companyInfo?.companyName || '익명';
-    const companyId = companyInfo?.companyId || null;
+    const authorName = author_name || companyInfo.companyName;
+    const companyId = companyInfo.companyId;
 
     let depth = 0;
     let groupId: number | null = null;
     let parentIdNum: number | null = null;
 
-    // 1. 답글 작성인 경우 부모 글 확인
+    // 답글 작성인 경우 부모 글 확인
     if (parent_id) {
       parentIdNum = parseInt(parent_id, 10);
       const parentResult = await executeQuery<any>(
@@ -165,7 +170,7 @@ export async function POST(req: NextRequest) {
       groupId = parentPost.GROUP_ID;
     }
 
-    // 2. 게시글 등록 (INSERT)
+    // 게시글 등록 (INSERT)
     const insertSql = `
       INSERT INTO API_POSTS (COMPANY_ID, TITLE, CONTENT, AUTHOR_NAME, PARENT_ID, GROUP_ID, DEPTH)
       VALUES (:companyId, :title, :content, :authorName, :parentId, :groupId, :depth)
@@ -185,7 +190,7 @@ export async function POST(req: NextRequest) {
       { autoCommit: true }
     );
 
-    // 3. 최상위 원글인 경우, 생성된 POST_ID를 GROUP_ID로 업데이트
+    // 최상위 원글인 경우, 생성된 POST_ID를 GROUP_ID로 업데이트
     if (!groupId) {
       await executeQuery(
         `UPDATE API_POSTS SET GROUP_ID = POST_ID WHERE GROUP_ID IS NULL`,
@@ -194,15 +199,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (companyInfo) {
-      await logCompanyApiCall(companyInfo.companyId, '/api/v1/posts', 'POST', 201);
-    }
+    await logCompanyApiCall(companyInfo.companyId, '/api/v1/posts', 'POST', 201);
 
     return NextResponse.json(
       {
         success: true,
         message: parent_id ? '계층형 답글 게시글이 작성되었습니다.' : '신규 게시글이 등록되었습니다.',
         data: {
+          company_id: companyId,
+          company_name: companyInfo.companyName,
           title,
           author_name: authorName,
           parent_id: parentIdNum,
@@ -214,8 +219,8 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Create post failed:', error);
     return NextResponse.json(
-      { error: 'server_error', message: error?.message || '게시글 등록 중 오류가 발생했습니다.' },
-      { status: 500 }
+      { error: 'unauthorized', message: error?.message || '게시글 등록 중 인증 오류가 발생했습니다.' },
+      { status: 401 }
     );
   }
 }

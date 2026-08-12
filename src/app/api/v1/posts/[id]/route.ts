@@ -8,10 +8,20 @@ interface Context {
 
 /**
  * GET /api/v1/posts/[id]
- * 게시글 상세 조회 및 조회수 증가 API
+ * OAuth 2.0 Bearer 인증 기반 게시글 상세 조회 및 조회수 증가 API
  */
 export async function GET(req: NextRequest, { params }: Context) {
   try {
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'unauthorized', message: '게시글 상세 조회를 위해 Authorization: Bearer <company_token> 이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    const companyInfo = await verifyCompanyToken(authHeader);
+
     const { id } = await params;
     const postId = parseInt(id, 10);
 
@@ -55,16 +65,7 @@ export async function GET(req: NextRequest, { params }: Context) {
       );
     }
 
-    // Bearer 토큰이 있을 경우 호출 로그 기록
-    const authHeader = req.headers.get('authorization');
-    if (authHeader) {
-      try {
-        const companyInfo = await verifyCompanyToken(authHeader);
-        await logCompanyApiCall(companyInfo.companyId, `/api/v1/posts/${postId}`, 'GET', 200);
-      } catch {
-        // 무시
-      }
-    }
+    await logCompanyApiCall(companyInfo.companyId, `/api/v1/posts/${postId}`, 'GET', 200);
 
     return NextResponse.json({
       success: true,
@@ -73,33 +74,33 @@ export async function GET(req: NextRequest, { params }: Context) {
   } catch (error: any) {
     console.error('Fetch post detail failed:', error);
     return NextResponse.json(
-      { error: 'server_error', message: error?.message || '게시글 상세 조회 중 오류가 발생했습니다.' },
-      { status: 500 }
+      { error: 'unauthorized', message: error?.message || '게시글 상세 조회 중 인증 오류가 발생했습니다.' },
+      { status: 401 }
     );
   }
 }
 
 /**
  * PUT /api/v1/posts/[id]
- * 게시글 수정 API
+ * OAuth 2.0 Bearer 인증 기반 게시글 수정 API
  */
 export async function PUT(req: NextRequest, { params }: Context) {
   try {
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'unauthorized', message: '게시글 수정을 위해 Authorization: Bearer <company_token> 이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    const companyInfo = await verifyCompanyToken(authHeader);
+
     const { id } = await params;
     const postId = parseInt(id, 10);
 
     if (isNaN(postId)) {
       return NextResponse.json({ error: 'invalid_id', message: '유효하지 않은 게시글 ID입니다.' }, { status: 400 });
-    }
-
-    let companyInfo = null;
-    const authHeader = req.headers.get('authorization');
-    if (authHeader) {
-      try {
-        companyInfo = await verifyCompanyToken(authHeader);
-      } catch {
-        // 인증 실패 시 무시
-      }
     }
 
     const body = await req.json().catch(() => ({}));
@@ -121,8 +122,8 @@ export async function PUT(req: NextRequest, { params }: Context) {
     }
 
     const post = checkResult.rows[0];
-    if (companyInfo && post.COMPANY_ID && post.COMPANY_ID !== companyInfo.companyId) {
-      return NextResponse.json({ error: 'forbidden', message: '본인이 작성한 게시글만 수정할 수 있습니다.' }, { status: 403 });
+    if (post.COMPANY_ID && post.COMPANY_ID !== companyInfo.companyId) {
+      return NextResponse.json({ error: 'forbidden', message: '본인 업체가 작성한 게시글만 수정할 수 있습니다.' }, { status: 403 });
     }
 
     const newTitle = title !== undefined ? title : post.TITLE;
@@ -140,9 +141,7 @@ export async function PUT(req: NextRequest, { params }: Context) {
 
     await executeQuery(updateSql, { title: newTitle, content: newContent, authorName: newAuthorName, postId }, { autoCommit: true });
 
-    if (companyInfo) {
-      await logCompanyApiCall(companyInfo.companyId, `/api/v1/posts/${postId}`, 'PUT', 200);
-    }
+    await logCompanyApiCall(companyInfo.companyId, `/api/v1/posts/${postId}`, 'PUT', 200);
 
     return NextResponse.json({
       success: true,
@@ -152,33 +151,33 @@ export async function PUT(req: NextRequest, { params }: Context) {
   } catch (error: any) {
     console.error('Update post failed:', error);
     return NextResponse.json(
-      { error: 'server_error', message: error?.message || '게시글 수정 중 오류가 발생했습니다.' },
-      { status: 500 }
+      { error: 'unauthorized', message: error?.message || '게시글 수정 중 인증 오류가 발생했습니다.' },
+      { status: 401 }
     );
   }
 }
 
 /**
  * DELETE /api/v1/posts/[id]
- * 게시글 및 하위 답글 논리 삭제 API
+ * OAuth 2.0 Bearer 인증 기반 게시글 및 하위 답글 논리 삭제 API
  */
 export async function DELETE(req: NextRequest, { params }: Context) {
   try {
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'unauthorized', message: '게시글 삭제를 위해 Authorization: Bearer <company_token> 이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    const companyInfo = await verifyCompanyToken(authHeader);
+
     const { id } = await params;
     const postId = parseInt(id, 10);
 
     if (isNaN(postId)) {
       return NextResponse.json({ error: 'invalid_id', message: '유효하지 않은 게시글 ID입니다.' }, { status: 400 });
-    }
-
-    let companyInfo = null;
-    const authHeader = req.headers.get('authorization');
-    if (authHeader) {
-      try {
-        companyInfo = await verifyCompanyToken(authHeader);
-      } catch {
-        // 무시
-      }
     }
 
     const checkSql = `SELECT COMPANY_ID FROM API_POSTS WHERE POST_ID = :postId AND IS_DELETED = 'N'`;
@@ -189,17 +188,15 @@ export async function DELETE(req: NextRequest, { params }: Context) {
     }
 
     const post = checkResult.rows[0];
-    if (companyInfo && post.COMPANY_ID && post.COMPANY_ID !== companyInfo.companyId) {
-      return NextResponse.json({ error: 'forbidden', message: '본인이 작성한 게시글만 삭제할 수 있습니다.' }, { status: 403 });
+    if (post.COMPANY_ID && post.COMPANY_ID !== companyInfo.companyId) {
+      return NextResponse.json({ error: 'forbidden', message: '본인 업체가 작성한 게시글만 삭제할 수 있습니다.' }, { status: 403 });
     }
 
     // 대상 게시글 및 하위 계층 답글 함께 논리 삭제
     const deleteSql = `UPDATE API_POSTS SET IS_DELETED = 'Y', UPDATED_AT = CURRENT_TIMESTAMP WHERE POST_ID = :postId OR PARENT_ID = :postId`;
     await executeQuery(deleteSql, { postId }, { autoCommit: true });
 
-    if (companyInfo) {
-      await logCompanyApiCall(companyInfo.companyId, `/api/v1/posts/${postId}`, 'DELETE', 200);
-    }
+    await logCompanyApiCall(companyInfo.companyId, `/api/v1/posts/${postId}`, 'DELETE', 200);
 
     return NextResponse.json({
       success: true,
@@ -208,8 +205,8 @@ export async function DELETE(req: NextRequest, { params }: Context) {
   } catch (error: any) {
     console.error('Delete post failed:', error);
     return NextResponse.json(
-      { error: 'server_error', message: error?.message || '게시글 삭제 중 오류가 발생했습니다.' },
-      { status: 500 }
+      { error: 'unauthorized', message: error?.message || '게시글 삭제 중 인증 오류가 발생했습니다.' },
+      { status: 401 }
     );
   }
 }

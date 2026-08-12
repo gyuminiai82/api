@@ -8,10 +8,20 @@ interface Context {
 
 /**
  * GET /api/v1/posts/[id]/comments
- * 특정 게시글의 계층형 댓글 목록 조회 및 페이징 API
+ * OAuth 2.0 Bearer 인증 기반 특정 게시글의 계층형 댓글 목록 조회 및 페이징 API
  */
 export async function GET(req: NextRequest, { params }: Context) {
   try {
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'unauthorized', message: '댓글 목록 조회를 위해 Authorization: Bearer <company_token> 이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    const companyInfo = await verifyCompanyToken(authHeader);
+
     const { id } = await params;
     const postId = parseInt(id, 10);
 
@@ -74,6 +84,8 @@ export async function GET(req: NextRequest, { params }: Context) {
 
     const listResult = await executeQuery<any>(listSql, { postId, maxRow, minRow });
 
+    await logCompanyApiCall(companyInfo.companyId, `/api/v1/posts/${postId}/comments`, 'GET', 200);
+
     return NextResponse.json({
       success: true,
       message: '계층형 댓글 목록 조회 성공',
@@ -90,33 +102,33 @@ export async function GET(req: NextRequest, { params }: Context) {
   } catch (error: any) {
     console.error('Fetch comments failed:', error);
     return NextResponse.json(
-      { error: 'server_error', message: error?.message || '댓글 목록 조회 중 오류가 발생했습니다.' },
-      { status: 500 }
+      { error: 'unauthorized', message: error?.message || '댓글 목록 조회 중 인증 오류가 발생했습니다.' },
+      { status: 401 }
     );
   }
 }
 
 /**
  * POST /api/v1/posts/[id]/comments
- * 계층형 댓글 / 답글 댓글 작성 API
+ * OAuth 2.0 Bearer 인증 기반 계층형 댓글 / 답글 댓글 작성 API
  */
 export async function POST(req: NextRequest, { params }: Context) {
   try {
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: 'unauthorized', message: '댓글 작성을 위해 Authorization: Bearer <company_token> 이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    const companyInfo = await verifyCompanyToken(authHeader);
+
     const { id } = await params;
     const postId = parseInt(id, 10);
 
     if (isNaN(postId)) {
       return NextResponse.json({ error: 'invalid_id', message: '유효하지 않은 게시글 ID입니다.' }, { status: 400 });
-    }
-
-    let companyInfo = null;
-    const authHeader = req.headers.get('authorization');
-    if (authHeader) {
-      try {
-        companyInfo = await verifyCompanyToken(authHeader);
-      } catch {
-        // 무시
-      }
     }
 
     const body = await req.json().catch(() => ({}));
@@ -135,8 +147,8 @@ export async function POST(req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: 'not_found', message: '댓글을 작성할 게시글이 존재하지 않습니다.' }, { status: 404 });
     }
 
-    const authorName = author_name || companyInfo?.companyName || '익명';
-    const companyId = companyInfo?.companyId || null;
+    const authorName = author_name || companyInfo.companyName;
+    const companyId = companyInfo.companyId;
 
     let depth = 0;
     let groupId: number | null = null;
@@ -190,9 +202,7 @@ export async function POST(req: NextRequest, { params }: Context) {
       );
     }
 
-    if (companyInfo) {
-      await logCompanyApiCall(companyInfo.companyId, `/api/v1/posts/${postId}/comments`, 'POST', 201);
-    }
+    await logCompanyApiCall(companyInfo.companyId, `/api/v1/posts/${postId}/comments`, 'POST', 201);
 
     return NextResponse.json(
       {
@@ -202,6 +212,8 @@ export async function POST(req: NextRequest, { params }: Context) {
           postId,
           content,
           author_name: authorName,
+          company_id: companyId,
+          company_name: companyInfo.companyName,
           parent_id: parentIdNum,
           depth,
         },
@@ -211,8 +223,8 @@ export async function POST(req: NextRequest, { params }: Context) {
   } catch (error: any) {
     console.error('Create comment failed:', error);
     return NextResponse.json(
-      { error: 'server_error', message: error?.message || '댓글 등록 중 오류가 발생했습니다.' },
-      { status: 500 }
+      { error: 'unauthorized', message: error?.message || '댓글 등록 중 인증 오류가 발생했습니다.' },
+      { status: 401 }
     );
   }
 }
